@@ -69,9 +69,8 @@ describe('effect', () => {
     expect(dummy).toBe(2);
     stop(runner);
 
-    // todo: ++ 语法 单侧无法通过
-    // obj.prop++;
-    obj.prop = 3;
+    obj.prop++;
+    // obj.prop = 3;
     expect(dummy).toBe(2);
 
     // stopped effect should still be manually callable

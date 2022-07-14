@@ -14,7 +14,7 @@ function createGetter(isReadonly = false) {
     }
 
     // 依赖收集
-    if (isReadonly) {
+    if (!isReadonly) {
       track(target, key);
     }
     return _target;

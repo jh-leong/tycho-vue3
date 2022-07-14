@@ -1,10 +1,13 @@
 import { extend } from '../shared';
 
+let shouldTrack: boolean;
+let activeEffect: ReactiveEffect;
+
 class ReactiveEffect {
   private _fn: any;
-  // 避免重复调用 stop 多次触发 cleanupEffect
+  /** 避免重复调用 stop 多次触发 cleanupEffect */
   active = true;
-  // 所有包含当前 Effect 实例的集合
+  /** 所有包含当前 Effect 实例的集合 */
   deps: any[] = [];
   scheduler: any;
   onStop?: () => void;
@@ -14,8 +17,18 @@ class ReactiveEffect {
     this.scheduler = scheduler;
   }
   run() {
+    if (!this.active) {
+      return this._fn();
+    }
+
+    shouldTrack = true;
+
     activeEffect = this;
-    return this._fn();
+    const result = this._fn();
+
+    shouldTrack = false;
+
+    return result;
   }
   stop() {
     if (this.active) {
@@ -32,6 +45,8 @@ class ReactiveEffect {
 
 function cleanupEffect(effect: ReactiveEffect) {
   effect.deps.forEach((dep: any) => dep.delete(effect));
+  // 清空集合, 优化内存
+  effect.deps.length = 0;
 }
 
 const targetMap = new Map();
@@ -39,6 +54,8 @@ const targetMap = new Map();
  * @method 依赖收集
  */
 export function track(target, key) {
+  if (!isTracking()) return;
+
   let depsMap = targetMap.get(target);
   if (!depsMap) {
     depsMap = new Map();
@@ -51,10 +68,15 @@ export function track(target, key) {
     depsMap.set(key, dep);
   }
 
-  if (!activeEffect) return;
+  // 避免 deps 重复收集
+  if (dep.has(activeEffect)) return;
 
   dep.add(activeEffect);
   activeEffect.deps.push(dep);
+}
+
+function isTracking() {
+  return shouldTrack && activeEffect !== undefined;
 }
 
 /**
@@ -73,7 +95,6 @@ export function trigger(target, key) {
   }
 }
 
-let activeEffect: ReactiveEffect;
 export function effect(fn, option: { scheduler?; onStop? } = {}) {
   const _effect = new ReactiveEffect(fn, option.scheduler);
 
