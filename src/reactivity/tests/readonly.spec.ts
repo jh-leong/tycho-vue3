@@ -1,16 +1,20 @@
-import { readonly } from '../reactive';
+import { isReadonly, readonly } from '../reactive';
 
 describe('readonly', () => {
-  it('happy path', () => {
-    // not set
+  it('should make nested value readonly', () => {
     const original = { foo: 1, bar: { baz: 2 } };
     const wrapped = readonly(original);
 
+    // not set
     expect(wrapped).not.toBe(original);
     expect(wrapped.foo).toBe(1);
+
+    // isReadonly
+    expect(isReadonly(wrapped)).toBe(true);
+    expect(isReadonly(original)).toBe(false);
   });
 
-  it('warn then call set', () => {
+  it('should call console.warn when set', () => {
     // mock
     console.warn = jest.fn();
 

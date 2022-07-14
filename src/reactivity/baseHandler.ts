@@ -1,8 +1,17 @@
 import { track, trigger } from './effect';
+import { ReactiveFlags } from './reactive';
 
 function createGetter(isReadonly = false) {
   return function get(target, key) {
     const _target = Reflect.get(target, key);
+
+    // 用于内部判断对象是否被代理
+    if (key === ReactiveFlags.IS_REACTIVE) {
+      return !isReadonly;
+    }
+    if (key === ReactiveFlags.IS_READONLY) {
+      return isReadonly;
+    }
 
     // 依赖收集
     if (isReadonly) {
