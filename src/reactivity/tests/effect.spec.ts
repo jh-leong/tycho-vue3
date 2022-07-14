@@ -17,7 +17,6 @@ describe('effect', () => {
     tycho.power++;
     expect(tychoPlus).toBe(101);
   });
-
   it('should return a runner when call effect', () => {
     let foo = 0;
     const runner = effect(() => {
@@ -30,7 +29,6 @@ describe('effect', () => {
     expect(foo).toBe(2);
     expect(res).toBe('foo');
   });
-
   it('scheduler', () => {
     let dummy;
     let run: any;
@@ -58,7 +56,6 @@ describe('effect', () => {
     // should have run
     expect(dummy).toBe(2);
   });
-
   it('stop', () => {
     let dummy;
     const obj = reactive({ prop: 1 });

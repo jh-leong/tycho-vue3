@@ -1,5 +1,6 @@
+import { isObject } from '../shared';
 import { track, trigger } from './effect';
-import { ReactiveFlags } from './reactive';
+import { reactive, ReactiveFlags, readonly } from './reactive';
 
 function createGetter(isReadonly = false) {
   return function get(target, key) {
@@ -11,6 +12,15 @@ function createGetter(isReadonly = false) {
     }
     if (key === ReactiveFlags.IS_READONLY) {
       return isReadonly;
+    }
+
+    // 嵌套对象 proxy 代理
+    if (isObject(target[key])) {
+      if (isReadonly) {
+        return readonly(target[key]);
+      } else {
+        return reactive(target[key]);
+      }
     }
 
     // 依赖收集

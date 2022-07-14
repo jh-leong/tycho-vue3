@@ -11,9 +11,10 @@ describe('readonly', () => {
 
     // isReadonly
     expect(isReadonly(wrapped)).toBe(true);
+    expect(isReadonly(wrapped.bar)).toBe(true);
     expect(isReadonly(original)).toBe(false);
+    expect(isReadonly(original.bar)).toBe(false);
   });
-
   it('should call console.warn when set', () => {
     // mock
     console.warn = jest.fn();
