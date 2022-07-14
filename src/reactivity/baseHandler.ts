@@ -1,8 +1,14 @@
-import { isObject } from '../shared';
+import { extend, isObject } from '../shared';
 import { track, trigger } from './effect';
 import { reactive, ReactiveFlags, readonly } from './reactive';
 
-function createGetter(isReadonly = false) {
+// 抽离, 仅在初始化时调用一次
+const get = createGetter();
+const set = createSetter();
+const readonlyGet = createGetter(true);
+const shallowReadonlyGet = createGetter(true, true);
+
+function createGetter(isReadonly = false, shallow = false) {
   return function get(target, key) {
     const _target = Reflect.get(target, key);
 
@@ -13,6 +19,8 @@ function createGetter(isReadonly = false) {
     if (key === ReactiveFlags.IS_READONLY) {
       return isReadonly;
     }
+
+    if (shallow) return _target;
 
     // 嵌套对象 proxy 代理
     if (isObject(target[key])) {
@@ -41,12 +49,8 @@ function createSetter() {
   };
 }
 
-// 抽离, 仅在初始化时调用一次
-const get = createGetter();
-const set = createSetter();
 export const mutableHandlers = { get, set };
 
-const readonlyGet = createGetter(true);
 export const readonlyHandlers = {
   get: readonlyGet,
   set(target, key) {
@@ -54,3 +58,7 @@ export const readonlyHandlers = {
     return true;
   },
 };
+
+export const shallowReadonlyHandlers = extend({}, readonlyHandlers, {
+  get: shallowReadonlyGet,
+});
