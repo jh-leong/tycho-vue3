@@ -25,8 +25,8 @@ function createGetter(isReadonly = false, shallow = false) {
     }
 
     // 嵌套对象 proxy 代理
-    if (isObject(target[key])) {
-      return isReadonly ? readonly(target[key]) : reactive(target[key]);
+    if (isObject(_target)) {
+      return isReadonly ? readonly(_target) : reactive(_target);
     }
 
     // 依赖收集

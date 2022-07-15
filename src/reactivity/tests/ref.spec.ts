@@ -1,6 +1,6 @@
 import { effect } from '../effect';
 import { reactive } from '../reactive';
-import { isRef, ref, unRef } from '../ref';
+import { isRef, proxyRefs, ref, unRef } from '../ref';
 
 describe('ref', () => {
   it('happy path', () => {
@@ -66,8 +66,7 @@ describe('ref', () => {
     a.value.count = 2;
     expect(dummy).toBe(2);
 
-    // todo: 没有在 effect 中触发 get 依赖收集的属性, 触发 set 时报错, 如下:
-    // a.value.foo++;
+    a.value.foo++;
   });
 
   it('isRef', () => {
@@ -86,19 +85,25 @@ describe('ref', () => {
     expect(unRef(1)).toBe(1);
   });
 
-  it.skip('proxyRefs', () => {
-    const user = {
+  it('proxyRefs', () => {
+    const user: any = {
       age: ref(10),
-      name: 'xiaohong',
+      name: 'tycho',
+      a: {
+        b: ref(10),
+      },
     };
 
     const proxyUser = proxyRefs(user);
     expect(user.age.value).toBe(10);
+
     expect(proxyUser.age).toBe(10);
-    expect(proxyUser.name).toBe('xiaohong');
+    expect(proxyUser.name).toBe('tycho');
+
+    // todo: 嵌套对象支持?
+    // expect(proxyUser.a.b).toBe(10);
 
     proxyUser.age = 20;
-
     expect(proxyUser.age).toBe(20);
     expect(user.age.value).toBe(20);
 

@@ -94,11 +94,13 @@ export function trigger(target, key) {
 }
 
 export function triggerEffects(dep: any) {
-  for (const effect of dep) {
-    if (effect.scheduler) {
-      effect.scheduler();
-    } else {
-      effect.run();
+  if (dep) {
+    for (const effect of dep) {
+      if (effect.scheduler) {
+        effect.scheduler();
+      } else {
+        effect.run();
+      }
     }
   }
 }
