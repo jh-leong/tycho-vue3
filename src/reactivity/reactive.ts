@@ -21,6 +21,10 @@ export function shallowReadonly<T extends object>(raw: T) {
   return createActiveObject<T>(raw, shallowReadonlyHandlers);
 }
 
+export function isProxy(value: any) {
+  return isReactive(value) || isReadonly(value);
+}
+
 export function isReactive(value: any) {
   return !!value[ReactiveFlags.IS_REACTIVE];
 }
