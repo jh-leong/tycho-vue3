@@ -10,8 +10,6 @@ const shallowReadonlyGet = createGetter(true, true);
 
 function createGetter(isReadonly = false, shallow = false) {
   return function get(target, key) {
-    const _target = Reflect.get(target, key);
-
     // 用于内部判断对象是否被代理
     if (key === ReactiveFlags.IS_REACTIVE) {
       return !isReadonly;
@@ -20,15 +18,15 @@ function createGetter(isReadonly = false, shallow = false) {
       return isReadonly;
     }
 
-    if (shallow) return _target;
+    const _target = Reflect.get(target, key);
+
+    if (shallow) {
+      return _target;
+    }
 
     // 嵌套对象 proxy 代理
     if (isObject(target[key])) {
-      if (isReadonly) {
-        return readonly(target[key]);
-      } else {
-        return reactive(target[key]);
-      }
+      return isReadonly ? readonly(target[key]) : reactive(target[key]);
     }
 
     // 依赖收集
