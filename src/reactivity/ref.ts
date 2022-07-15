@@ -5,6 +5,7 @@ import { reactive } from './reactive';
 class RefImpl {
   private _value: any;
   private _rawValue: any;
+  private __v_isRef = true;
   dep: any;
 
   constructor(value: any) {
@@ -30,6 +31,9 @@ class RefImpl {
   }
 }
 
+/**
+ * 嵌套对象代理
+ */
 function convert(value) {
   return isObject(value) ? reactive(value) : value;
 }
@@ -38,6 +42,14 @@ function trackRefValue(ref) {
   if (isTracking()) {
     trackEffects(ref.dep);
   }
+}
+
+export function isRef(ref) {
+  return !!ref.__v_isRef;
+}
+
+export function unRef(ref) {
+  return isRef(ref) ? ref.value : ref;
 }
 
 export function ref(value: any) {
