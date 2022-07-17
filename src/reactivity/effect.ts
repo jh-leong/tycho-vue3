@@ -3,7 +3,7 @@ import { extend } from '../shared';
 let shouldTrack: boolean;
 let activeEffect: ReactiveEffect;
 
-class ReactiveEffect {
+export class ReactiveEffect {
   private _fn: any;
   /** 避免重复调用 stop 多次触发 cleanupEffect */
   active = true;
@@ -94,6 +94,7 @@ export function trigger(target, key) {
 }
 
 export function triggerEffects(dep: any) {
+  // todo: 当没依赖收集时 dep 有可能不存在
   if (dep) {
     for (const effect of dep) {
       if (effect.scheduler) {
