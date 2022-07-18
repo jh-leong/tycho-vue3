@@ -29,7 +29,7 @@ function setupStatefulComponent(instance) {
 
 function handleSetupResult(instance, setupResult) {
   if (typeof setupResult === 'object') {
-    instance.setupState - setupResult;
+    instance.setupState = setupResult;
   }
   // todo function
 
@@ -39,7 +39,5 @@ function handleSetupResult(instance, setupResult) {
 function finishComponentSetup(instance: any) {
   const Component = instance.type;
 
-  if (!Component.render) {
-    Component.render = instance.render;
-  }
+  instance.render = Component.render;
 }

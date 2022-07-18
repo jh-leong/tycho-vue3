@@ -1,19 +1,26 @@
 {
   "name": "tycho-vue",
   "version": "1.0.0",
-  "main": "index.js",
+  // cjs 
+  "main": "lib/tycho-vue.cjs.js",
+  // esm
+  "module": "lib/tycho-vue.esm.js",
   "license": "MIT",
   "scripts": {
-    "test": "jest"
+    "test": "jest",
+    "build": "rollup -c rollup.config.js"
   },
   "devDependencies": {
     "@babel/core": "^7.18.6",
     "@babel/preset-env": "^7.18.6",
     "@babel/preset-typescript": "^7.18.6",
+    "@rollup/plugin-typescript": "^8.3.3",
     "@types/jest": "^28.1.4",
     "babel-jest": "^28.1.2",
     "jest": "^28.1.2",
     "prettier": "2.7.1",
+    "rollup": "^2.77.0",
+    "tslib": "^2.4.0",
     "typescript": "^4.7.4"
   }
 }

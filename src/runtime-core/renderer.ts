@@ -5,6 +5,9 @@ export function render(vnode, container) {
 }
 
 function path(vnode, container) {
+  // todo: 判断 vnode 是否为 element
+  // processElement();
+
   processComponent(vnode, container);
 }
 
@@ -23,4 +26,8 @@ function setupRenderEffect(instance, container) {
   const subTree = instance.render();
 
   path(subTree, container);
+}
+
+function processElement() {
+  throw new Error('Function not implemented.');
 }
