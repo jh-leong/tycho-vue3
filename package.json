@@ -1,9 +1,7 @@
 {
   "name": "tycho-vue",
   "version": "1.0.0",
-  // cjs 
   "main": "lib/tycho-vue.cjs.js",
-  // esm
   "module": "lib/tycho-vue.esm.js",
   "license": "MIT",
   "scripts": {
