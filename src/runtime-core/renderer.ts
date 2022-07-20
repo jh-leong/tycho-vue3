@@ -13,29 +13,12 @@ function path(vnode, container) {
   }
 }
 
-function processComponent(vnode, container) {
-  mountComponent(vnode, container);
-}
-
-function mountComponent(vnode, container) {
-  const instance = createComponentInstance(vnode);
-
-  setupComponent(instance);
-  setupRenderEffect(instance, container);
-}
-
-function setupRenderEffect(instance, container) {
-  const subTree = instance.render();
-
-  path(subTree, container);
-}
-
 function processElement(vnode, container) {
   mountElement(vnode, container);
 }
 
 function mountElement(vnode: any, container: any) {
-  const el = document.createElement(vnode.type);
+  const el = (vnode.el = document.createElement(vnode.type));
 
   const { children, props } = vnode;
 
@@ -53,8 +36,30 @@ function mountElement(vnode: any, container: any) {
 
   container.append(el);
 }
+
 function mountChildren(vnode, container) {
   vnode.children.forEach((v) => {
     path(v, container);
   });
+}
+
+function processComponent(vnode, container) {
+  mountComponent(vnode, container);
+}
+
+function mountComponent(initialVNode, container) {
+  const instance = createComponentInstance(initialVNode);
+
+  setupComponent(instance);
+  setupRenderEffect(instance, initialVNode, container);
+}
+
+function setupRenderEffect(instance, initialVNode, container) {
+  const { proxy } = instance;
+  const subTree = instance.render.call(proxy);
+
+  // subTree 根节点肯定是一个 element, 估 el 一定存在
+  path(subTree, container);
+
+  initialVNode.el = subTree.el;
 }
