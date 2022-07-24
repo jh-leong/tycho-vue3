@@ -49,7 +49,14 @@ function cleanupEffect(effect: ReactiveEffect) {
   effect.deps.length = 0;
 }
 
-const targetMap = new Map();
+/**
+ * 使用 WeakMap 代替 map
+ * WeakMap 只能使用 object 作为 key 值
+ * 并且 object 没有引用时可以被垃圾回收
+ * WeakMap 不能被迭代
+ */
+const targetMap = new WeakMap();
+
 /**
  * @method 依赖收集
  */
