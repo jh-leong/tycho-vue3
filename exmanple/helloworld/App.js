@@ -5,13 +5,16 @@ window.__this = null;
 
 export const App = {
   render() {
-    window.__this = this;
+    window.app = this;
 
     const type = 'div';
 
     const props = {
       id: 'root',
       class: ['red', 'root_wrap'],
+      onClick() {
+        console.log('onClick');
+      },
     };
 
     const children = 'hi, ' + this.msg;
