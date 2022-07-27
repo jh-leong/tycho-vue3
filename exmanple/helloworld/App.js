@@ -15,7 +15,7 @@ export const App = {
       id: 'root',
       class: ['red', 'root_wrap'],
       onClick() {
-        console.log('onClick');
+        // console.log('onClickRoot');
       },
     };
 
@@ -28,6 +28,9 @@ export const App = {
       h('div', {}, 'hi, ' + this.msg),
       h(Foo, {
         count: 1,
+        onAddFooFoo(a, b) {
+          console.log('onAddFooFoo', a, b);
+        },
       }),
     ];
 
