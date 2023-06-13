@@ -7,7 +7,10 @@ export class ReactiveEffect {
   private _fn: any;
   /** 避免重复调用 stop 多次触发 cleanupEffect */
   active = true;
-  /** 所有包含当前 Effect 实例的集合 */
+  /**
+   * 所有包含当前 Effect 实例的集合
+   * 用于调用 stop 时, 追踪收集的依赖, 执行清空依赖逻辑
+   */
   deps: any[] = [];
   scheduler: any;
   onStop?: () => void;
