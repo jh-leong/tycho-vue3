@@ -100,8 +100,8 @@ describe('ref', () => {
     expect(proxyUser.age).toBe(10);
     expect(proxyUser.name).toBe('tycho');
 
-    // todo: 嵌套对象支持?
-    // expect(proxyUser.a.b).toBe(10);
+    // 只支持一层的 unref
+    expect(proxyUser.a.b.value).toBe(10);
 
     proxyUser.age = 20;
     expect(proxyUser.age).toBe(20);

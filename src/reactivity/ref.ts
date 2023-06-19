@@ -69,17 +69,19 @@ export function ref(value: any) {
   return new RefImpl(value);
 }
 
-export function proxyRefs<T extends object>(objectWithRef: T) {
-  return new Proxy(objectWithRef, {
-    get(target, key) {
-      return unRef(Reflect.get(target, key));
-    },
-    set(target, key, value) {
-      if (!isRef(value) && isRef(target[key])) {
-        return (target[key].value = value);
-      } else {
-        return Reflect.set(target, key, value);
-      }
-    },
-  });
+const shallowUnwrapHandlers: ProxyHandler<any> = {
+  get: (target, key, receiver) => unRef(Reflect.get(target, key, receiver)),
+  set: (target, key, value, receiver) => {
+    const oldValue = target[key];
+    if (isRef(oldValue) && !isRef(value)) {
+      oldValue.value = value;
+      return true;
+    } else {
+      return Reflect.set(target, key, value, receiver);
+    }
+  },
+};
+
+export function proxyRefs<T extends object>(objectWithRefs: T) {
+  return new Proxy(objectWithRefs, shallowUnwrapHandlers);
 }
