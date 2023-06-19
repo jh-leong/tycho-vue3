@@ -1,11 +1,21 @@
 import { hasChanged, isObject } from '../shared';
-import { isTracking, trackEffects, triggerEffects } from './effect';
+import {
+  ReactiveEffect,
+  isTracking,
+  trackEffects,
+  triggerEffects,
+} from './effect';
 import { reactive } from './reactive';
 
 class RefImpl {
   private _value: any;
+  /**
+   * 用于 set 时比较有没修改
+   *
+   * 对象类型的值, 会被 reactive 包装 (变成 proxy 代理)
+   */
   private _rawValue: any;
-  dep = new Set();
+  dep = new Set<ReactiveEffect>();
   __v_isRef = true;
 
   constructor(value: any) {
@@ -37,7 +47,7 @@ function convert(value) {
   return isObject(value) ? reactive(value) : value;
 }
 
-function trackRefValue(ref) {
+function trackRefValue(ref: RefImpl) {
   if (isTracking()) {
     trackEffects(ref.dep);
   }

@@ -81,7 +81,7 @@ export function track(target, key) {
   trackEffects(dep);
 }
 
-export function trackEffects(dep: any) {
+export function trackEffects(dep: Set<ReactiveEffect>) {
   // 避免 deps 重复收集
   if (dep.has(activeEffect)) return;
 
