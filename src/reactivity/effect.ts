@@ -11,7 +11,7 @@ export class ReactiveEffect {
    * 所有包含当前 Effect 实例的集合
    * 用于调用 stop 时, 追踪收集的依赖, 执行清空依赖逻辑
    */
-  deps: any[] = [];
+  deps: Set<ReactiveEffect>[] = [];
   scheduler: any;
   onStop?: () => void;
 
@@ -47,7 +47,7 @@ export class ReactiveEffect {
 }
 
 function cleanupEffect(effect: ReactiveEffect) {
-  effect.deps.forEach((dep: any) => dep.delete(effect));
+  effect.deps.forEach((dep) => dep.delete(effect));
   // 清空集合, 优化内存
   effect.deps.length = 0;
 }
