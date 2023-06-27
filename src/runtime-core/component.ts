@@ -48,7 +48,7 @@ function handleSetupResult(instance, setupResult) {
   if (typeof setupResult === 'object') {
     instance.setupState = setupResult;
   }
-  // todo function
+  // todo if setupResult is function
 
   finishComponentSetup(instance);
 }

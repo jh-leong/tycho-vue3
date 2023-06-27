@@ -1,12 +1,35 @@
 import { ShapeFlags } from '../shared/shapeFlags';
 
-export function createVNode(type, props?, children?) {
-  const vnode = {
+export type VNodeType = {
+  render: Function;
+  setup?: Function;
+  name?: string;
+};
+
+type CreateVNodeType = VNodeType | string;
+
+export type VNode = {
+  type: CreateVNodeType;
+  shapeFlag: ShapeFlags;
+  el: Element | null;
+  props?: VNodeProps;
+  children?: VNodeChildren;
+};
+
+export type VNodeProps = Record<PropertyKey, any>;
+export type VNodeChildren = string | VNode[];
+
+export function createVNode(
+  type: CreateVNodeType,
+  props?: VNodeProps,
+  children?: VNodeChildren
+): VNode {
+  const vnode: VNode = {
+    el: null,
     type,
     props,
     children,
     shapeFlag: getShapeFlag(type),
-    el: null,
   };
 
   if (typeof children === 'string') {

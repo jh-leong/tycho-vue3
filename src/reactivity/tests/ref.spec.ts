@@ -54,19 +54,22 @@ describe('ref', () => {
   });
 
   it('should make nested properties reactive', () => {
-    const a = ref({
+    const rowA = {
       count: 1,
       foo: 1,
-    });
+    };
+    const refA = ref(rowA);
     let dummy;
     effect(() => {
-      dummy = a.value.count;
+      dummy = refA.value.count;
     });
     expect(dummy).toBe(1);
-    a.value.count = 2;
+    refA.value.count = 2;
     expect(dummy).toBe(2);
 
-    a.value.foo++;
+    expect(rowA.count).toBe(2);
+
+    refA.value.foo++;
   });
 
   it('isRef', () => {
