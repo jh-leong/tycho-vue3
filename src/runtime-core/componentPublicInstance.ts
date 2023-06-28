@@ -1,11 +1,12 @@
 import { hasOwn } from '../shared';
+import { ComponentInternalInstance } from './component';
 
 const publicPropertiesMap = {
-  $el: (i) => i.vnode.el,
+  $el: (i: ComponentInternalInstance) => i.vnode.el,
 };
 
 export const PublicInstanceHandlers = {
-  get({ instance }, key) {
+  get({ instance }: { instance: ComponentInternalInstance }, key: string) {
     const { setupState, props } = instance;
 
     if (key in setupState) {

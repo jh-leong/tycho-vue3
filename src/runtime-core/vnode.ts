@@ -1,17 +1,19 @@
 import { ShapeFlags } from '../shared/shapeFlags';
 
-export type VNodeType = {
-  render: Function;
+export type RenderFunction = () => VNode;
+
+export type Component = {
+  render: RenderFunction;
   setup?: Function;
   name?: string;
 };
 
-type CreateVNodeType = VNodeType | string;
+export type VNodeTypes = Component | string;
 
 export type VNode = {
-  type: CreateVNodeType;
-  shapeFlag: ShapeFlags;
+  type: VNodeTypes;
   el: Element | null;
+  shapeFlag: ShapeFlags;
   props?: VNodeProps;
   children?: VNodeChildren;
 };
@@ -20,7 +22,7 @@ export type VNodeProps = Record<PropertyKey, any>;
 export type VNodeChildren = string | VNode[];
 
 export function createVNode(
-  type: CreateVNodeType,
+  type: VNodeTypes,
   props?: VNodeProps,
   children?: VNodeChildren
 ): VNode {

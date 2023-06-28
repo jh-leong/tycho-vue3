@@ -1,5 +1,11 @@
-export function initProps(instance, rawProps) {
-  instance.props = rawProps || {};
+import { ComponentInternalInstance } from './component';
+import { VNodeProps } from './vnode';
+
+export function initProps(
+  instance: ComponentInternalInstance,
+  rawProps: VNodeProps = {}
+) {
+  instance.props = rawProps;
 
   // todo: attrs
 }

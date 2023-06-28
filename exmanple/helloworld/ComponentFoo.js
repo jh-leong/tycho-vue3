@@ -16,7 +16,7 @@ export const Foo = {
   },
   render() {
     const btn = h('button', { onClick: this.emitAdd }, 'emitButton');
-    const child1 = h('p', {}, 'foo: ' + this.count);
+    const child1 = h('p', {}, 'root - child2: FooComponent: ' + this.count);
 
     return h('div', {}, [child1, btn]);
   },

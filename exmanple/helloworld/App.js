@@ -1,40 +1,33 @@
 import { h } from '../../lib/tycho-vue.esm.js';
 import { Foo } from './ComponentFoo.js';
 
-// 用于测试 render 的 this
-window.__this = null;
-
 export const App = {
   name: 'App',
   render() {
     window.app = this;
 
-    const type = 'div';
-
     const props = {
       id: 'root',
       class: ['red', 'root_wrap'],
       onClick() {
-        // console.log('onClickRoot');
+        console.log('onClickRoot');
       },
     };
 
-    // const children = 'hi, ' + this.msg;
-    // const children = [
-    //   h('p', { class: 'red' }, 'hi'),
-    //   h('p', { class: 'blue' }, this.msg),
-    // ];
     const children = [
-      h('div', {}, 'hi, ' + this.msg),
+      // 普通元素
+      h('div', {}, 'root - child1: hi, ' + this.msg),
+      // 组件
       h(Foo, {
         count: 1,
         onAddFooFoo(a, b) {
           console.log('onAddFooFoo', a, b);
         },
+        // todo: 支持在组件的 props 上定义事件监听, 目前只支持监听组件的 emit 事件
       }),
     ];
 
-    return h(type, props, children);
+    return h('div', props, children);
   },
 
   setup() {
