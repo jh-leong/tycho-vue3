@@ -1,4 +1,5 @@
 import { ShapeFlags } from '../shared/shapeFlags';
+import { SlotProps } from './helper/renderSlots';
 
 export type RenderFunction = () => VNode;
 
@@ -10,34 +11,49 @@ export type Component = {
 
 export type VNodeTypes = Component | string;
 
-export type VNode = {
-  type: VNodeTypes;
+export type VNode = VNodeString | VNodeComponent;
+
+interface VNodeBase {
   el: Element | null;
   shapeFlag: ShapeFlags;
   props?: VNodeProps;
-  children?: VNodeChildren;
-};
+}
+
+export interface VNodeString extends VNodeBase {
+  type: string;
+  children?: string | VNode[];
+}
+
+export interface VNodeComponent extends VNodeBase {
+  type: Component;
+  children?: Record<string, (props?: SlotProps) => VNode[] | VNode>;
+}
 
 export type VNodeProps = Record<PropertyKey, any>;
-export type VNodeChildren = string | VNode[];
 
 export function createVNode(
   type: VNodeTypes,
   props?: VNodeProps,
-  children?: VNodeChildren
+  children?: VNode['children']
 ): VNode {
   const vnode: VNode = {
     el: null,
-    type,
-    props,
-    children,
     shapeFlag: getShapeFlag(type),
-  };
+    props,
+    type,
+    children,
+  } as VNode;
 
   if (typeof children === 'string') {
     vnode.shapeFlag |= ShapeFlags.TEXT_CHILDREN;
   } else if (Array.isArray(children)) {
     vnode.shapeFlag |= ShapeFlags.ARRAY_CHILDREN;
+  }
+
+  if (vnode.shapeFlag & ShapeFlags.STATEFUL_COMPONENT) {
+    if (typeof children === 'object') {
+      vnode.shapeFlag |= ShapeFlags.SLOTS_CHILDREN;
+    }
   }
 
   return vnode;

@@ -2,26 +2,38 @@ import { shallowReadonly } from '../reactivity/reactive';
 import { emit } from './componentEmit';
 import { PublicInstanceHandlers } from './componentPublicInstance';
 import { initProps } from './componentsProps';
-import { VNode, Component, RenderFunction, VNodeProps } from './vnode';
+import { initSlot } from './componetSlots';
+import { SlotProps } from './helper/renderSlots';
+import {
+  VNode,
+  Component,
+  RenderFunction,
+  VNodeProps,
+  VNodeComponent,
+} from './vnode';
+
+export type ComponentSlots = Record<string, (props: SlotProps) => VNode[]>;
 
 export type ComponentInternalInstance = {
-  vnode: VNode;
-  type: VNode['type'];
+  vnode: VNodeComponent;
+  type: Component;
   setupState: any;
   props: VNodeProps;
   emit: Function;
+  slots: ComponentSlots;
   render?: RenderFunction;
   proxy?: { instance: ComponentInternalInstance };
 };
 
 export function createComponentInstance(
-  vnode: VNode
+  vnode: VNodeComponent
 ): ComponentInternalInstance {
   const componentInstance: ComponentInternalInstance = {
     vnode,
     type: vnode.type,
     setupState: {},
     props: {},
+    slots: {},
     emit: () => {},
   };
 
@@ -34,9 +46,9 @@ export function createComponentInstance(
  * @description setupComponent 的作用是初始化组件的 props、slots、attrs、setupState 等
  */
 export function setupComponent(instance: ComponentInternalInstance) {
-  // todo
-  // initSlot()
   initProps(instance, instance.vnode.props);
+
+  initSlot(instance, instance.vnode.children);
 
   setupStatefulComponent(instance);
 }
@@ -64,7 +76,7 @@ function setupStatefulComponent(instance: ComponentInternalInstance) {
   }
 }
 
-/** 
+/**
  * @description handleSetupResult 的作用是处理 setup 函数的返回值
  */
 function handleSetupResult(

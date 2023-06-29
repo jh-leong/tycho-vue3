@@ -4,13 +4,18 @@ import {
   createComponentInstance,
   setupComponent,
 } from './component';
-import { VNode } from './vnode';
+import { VNode, VNodeComponent } from './vnode';
 
 /**
  * @description render 函数的作用是将 vnode 渲染到 container 中
  */
 export function render(vnode: VNode, container: Element) {
   path(vnode, container);
+}
+
+function isComponent(vnode: VNode): vnode is VNodeComponent {
+  const { shapeFlag } = vnode;
+  return Boolean(shapeFlag & ShapeFlags.STATEFUL_COMPONENT);
 }
 
 /**
@@ -27,9 +32,10 @@ function path(vnode: VNode, container: Element) {
     processElement(vnode, container);
   }
   // 传入的是一个组件
-  else if (shapeFlag & ShapeFlags.STATEFUL_COMPONENT) {
+  else if (isComponent(vnode)) {
     processComponent(vnode, container);
   }
+  // 非法传入暂不处理
 }
 
 /**
@@ -82,11 +88,11 @@ function mountChildren(vnode: VNode, container: Element) {
 /**
  * @description 处理组件
  */
-function processComponent(vnode: VNode, container: Element) {
+function processComponent(vnode: VNodeComponent, container: Element) {
   mountComponent(vnode, container);
 }
 
-function mountComponent(initialVNode: VNode, container: Element) {
+function mountComponent(initialVNode: VNodeComponent, container: Element) {
   const instance = createComponentInstance(initialVNode);
 
   setupComponent(instance);
@@ -108,8 +114,8 @@ function setupRenderEffect(
   // el 一定存在: 递归处理 subTree 时，会将 subTree.el 赋值 (最后一个根节点一定是 Element, 否则就无限循环了)
   initialVNode.el = subTree.el;
 
-  /** 
-   * todo: 
+  /**
+   * todo:
    * 支持在组件的 props 上传入事件监听, 在 el 上挂载 instance.props 上监听的事件
    * 目前只支持监听组件的 emit 事件
    */
