@@ -1,5 +1,5 @@
 import { ComponentSlots } from '../component';
-import { VNode, createVNode } from '../vnode';
+import { FRAGMENT, VNode, createVNode } from '../vnode';
 
 export type SlotProps = Record<string, any>;
 
@@ -12,7 +12,7 @@ export function renderSlots(
 
   if (slot) {
     if (typeof slot === 'function') {
-      return createVNode('div', {}, slot(props));
+      return createVNode(FRAGMENT, {}, slot(props));
     }
   }
 }

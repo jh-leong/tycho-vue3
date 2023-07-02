@@ -1,6 +1,28 @@
 import { ShapeFlags } from '../shared/shapeFlags';
 import { SlotProps } from './helper/renderSlots';
 
+export const FRAGMENT = Symbol('FRAGMENT');
+export const CREATE_TEXT = Symbol('CREATE_TEXT');
+
+export type VNode = VNodeString | VNodeComponent | VNodeFragment | VNodeText;
+
+interface VNodeBase {
+  shapeFlag: ShapeFlags;
+  props?: VNodeProps;
+}
+
+export interface VNodeString extends VNodeBase {
+  type: string;
+  el: Element | null;
+  children?: string | VNode[];
+}
+
+export interface VNodeComponent extends VNodeBase {
+  type: Component;
+  el: Element | null;
+  children?: Record<string, (props?: SlotProps) => VNode[] | VNode>;
+}
+
 export type RenderFunction = () => VNode;
 
 export type Component = {
@@ -9,33 +31,25 @@ export type Component = {
   name?: string;
 };
 
-export type VNodeTypes = Component | string;
-
-export type VNode = VNodeString | VNodeComponent;
-
-interface VNodeBase {
+export interface VNodeFragment extends VNodeBase {
+  type: typeof FRAGMENT;
   el: Element | null;
-  shapeFlag: ShapeFlags;
-  props?: VNodeProps;
+  children?: VNode[];
 }
 
-export interface VNodeString extends VNodeBase {
-  type: string;
-  children?: string | VNode[];
-}
-
-export interface VNodeComponent extends VNodeBase {
-  type: Component;
-  children?: Record<string, (props?: SlotProps) => VNode[] | VNode>;
+export interface VNodeText extends VNodeBase {
+  type: typeof CREATE_TEXT;
+  el: Text;
+  children?: string;
 }
 
 export type VNodeProps = Record<PropertyKey, any>;
 
-export function createVNode(
-  type: VNodeTypes,
+export function createVNode<T extends VNode['type'], V = VNode>(
+  type: T,
   props?: VNodeProps,
   children?: VNode['children']
-): VNode {
+): V extends { type: T } ? V : never {
   const vnode: VNode = {
     el: null,
     shapeFlag: getShapeFlag(type),
@@ -56,7 +70,11 @@ export function createVNode(
     }
   }
 
-  return vnode;
+  return vnode as any;
+}
+
+export function createTextVNode(text: string) {
+  return createVNode(CREATE_TEXT, {}, text);
 }
 
 function getShapeFlag(type) {

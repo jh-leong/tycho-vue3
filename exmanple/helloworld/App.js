@@ -1,4 +1,4 @@
-import { h } from '../../lib/tycho-vue.esm.js';
+import { h, createTextVNode } from '../../lib/tycho-vue.esm.js';
 import { Foo } from './ComponentFoo.js';
 
 export const App = {
@@ -44,7 +44,7 @@ export const App = {
           },
           // 向组件注入具名插槽
           {
-            slot1: ({ slot1ScopeValue }) =>
+            slot1: ({ slot1ScopeValue }) => [
               h(
                 'p',
                 {
@@ -52,6 +52,8 @@ export const App = {
                 },
                 `App 注入 Foo 的 slot1, slot1ScopeValue: ${slot1ScopeValue}`
               ),
+              createTextVNode('slot1 的第二个元素 CREATE_TEXT'),
+            ],
             slot2: () =>
               h(
                 'p',

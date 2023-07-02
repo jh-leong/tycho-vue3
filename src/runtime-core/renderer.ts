@@ -4,7 +4,15 @@ import {
   createComponentInstance,
   setupComponent,
 } from './component';
-import { VNode, VNodeComponent } from './vnode';
+import {
+  CREATE_TEXT,
+  FRAGMENT,
+  VNode,
+  VNodeComponent,
+  VNodeFragment,
+  VNodeString,
+  VNodeText,
+} from './vnode';
 
 /**
  * @description render 函数的作用是将 vnode 渲染到 container 中
@@ -25,23 +33,45 @@ function isComponent(vnode: VNode): vnode is VNodeComponent {
  * 递归处理 vnode, 直到 vnode 的类型是 element, 最后挂载到 container 中
  */
 function path(vnode: VNode, container: Element) {
-  const { shapeFlag } = vnode;
+  const { type, shapeFlag } = vnode;
 
-  // vnode.type 是一个字符串，说明是一个 element
-  if (shapeFlag & ShapeFlags.ELEMENT) {
-    processElement(vnode, container);
+  switch (type) {
+    case FRAGMENT:
+      processFragment(vnode, container);
+      break;
+
+    case CREATE_TEXT:
+      processText(vnode, container);
+      break;
+
+    default:
+      // element
+      if (shapeFlag & ShapeFlags.ELEMENT) {
+        processElement(vnode as VNodeString, container);
+      }
+      // 传入的是一个组件
+      else if (isComponent(vnode)) {
+        processComponent(vnode, container);
+      }
+      break;
   }
-  // 传入的是一个组件
-  else if (isComponent(vnode)) {
-    processComponent(vnode, container);
-  }
-  // 非法传入暂不处理
+}
+
+function processText(vnode: VNodeText, container: Element) {
+  const { children } = vnode;
+  const textNode = document.createTextNode(children!);
+  vnode.el = textNode;
+  container.append(textNode);
+}
+
+function processFragment(vnode: VNodeFragment, container: Element) {
+  mountChildren(vnode, container);
 }
 
 /**
  * @description 处理 element
  */
-function processElement(vnode: VNode, container: Element) {
+function processElement(vnode: VNodeString, container: Element) {
   mountElement(vnode, container);
 
   // todo: update
