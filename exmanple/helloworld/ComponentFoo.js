@@ -1,4 +1,4 @@
-import { h, renderSlots } from '../../lib/tycho-vue.esm.js';
+import { h, renderSlots, getCurrentInstance } from '../../lib/tycho-vue.esm.js';
 
 /**
  * 组件 Foo
@@ -6,9 +6,14 @@ import { h, renderSlots } from '../../lib/tycho-vue.esm.js';
 export const Foo = {
   name: 'ComponentFoo',
   setup(props, { emit }) {
+    // props is readonly
     console.warn('🚀\n ~ file: ComponentFoo.js:5 ~ setup ~ props:', props);
 
-    // props is readonly
+    const instance = getCurrentInstance();
+    console.warn(
+      '🚀\n ~ file: ComponentFoo.js:13 ~ setup ~ instance:',
+      instance
+    );
 
     const emitAdd = () => {
       console.log('inEmitAdd');

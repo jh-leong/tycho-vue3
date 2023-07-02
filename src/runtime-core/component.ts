@@ -68,9 +68,11 @@ function setupStatefulComponent(instance: ComponentInternalInstance) {
   const { setup } = Component;
 
   if (setup) {
+    setCurrentInstance(instance);
     const setupResult = setup(shallowReadonly(props), {
       emit: instance.emit,
     });
+    setCurrentInstance(null);
 
     handleSetupResult(instance, setupResult);
   }
@@ -96,3 +98,13 @@ function finishComponentSetup(instance: ComponentInternalInstance) {
 
   instance.render = Component.render;
 }
+
+let currentInstance: null | ComponentInternalInstance = null;
+export function getCurrentInstance() {
+  return currentInstance;
+}
+
+// 抽离 set 方法, 便于断点调试
+const setCurrentInstance = (instance: typeof currentInstance) => {
+  currentInstance = instance;
+};

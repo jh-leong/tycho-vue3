@@ -1,9 +1,16 @@
-import { h, createTextVNode } from '../../lib/tycho-vue.esm.js';
+import {
+  h,
+  createTextVNode,
+  getCurrentInstance,
+} from '../../lib/tycho-vue.esm.js';
 import { Foo } from './ComponentFoo.js';
 
 export const App = {
   name: 'App',
   setup() {
+    const instance = getCurrentInstance();
+    console.warn('🚀\n ~ file: App.js:8 ~ setup ~ instance:', instance);
+
     const onAddFooFoo = (a, b) => {
       this.count += a + b;
     };
