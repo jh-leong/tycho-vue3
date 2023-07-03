@@ -32,12 +32,16 @@ function isComponent(vnode: VNode): vnode is VNodeComponent {
  * path 的作用是根据 vnode 的类型，调用不同的处理函数
  * 递归处理 vnode, 直到 vnode 的类型是 element, 最后挂载到 container 中
  */
-function path(vnode: VNode, container: Element) {
+function path(
+  vnode: VNode,
+  container: Element,
+  parentComponent: ComponentInternalInstance['parent'] = null
+) {
   const { type, shapeFlag } = vnode;
 
   switch (type) {
     case FRAGMENT:
-      processFragment(vnode, container);
+      processFragment(vnode, container, parentComponent);
       break;
 
     case CREATE_TEXT:
@@ -47,11 +51,11 @@ function path(vnode: VNode, container: Element) {
     default:
       // element
       if (shapeFlag & ShapeFlags.ELEMENT) {
-        processElement(vnode as VNodeString, container);
+        processElement(vnode as VNodeString, container, parentComponent);
       }
       // 传入的是一个组件
       else if (isComponent(vnode)) {
-        processComponent(vnode, container);
+        processComponent(vnode, container, parentComponent);
       }
       break;
   }
@@ -64,20 +68,32 @@ function processText(vnode: VNodeText, container: Element) {
   container.append(textNode);
 }
 
-function processFragment(vnode: VNodeFragment, container: Element) {
-  mountChildren(vnode, container);
+function processFragment(
+  vnode: VNodeFragment,
+  container: Element,
+  parentComponent: ComponentInternalInstance['parent']
+) {
+  mountChildren(vnode, container, parentComponent);
 }
 
 /**
  * @description 处理 element
  */
-function processElement(vnode: VNodeString, container: Element) {
-  mountElement(vnode, container);
+function processElement(
+  vnode: VNodeString,
+  container: Element,
+  parentComponent: ComponentInternalInstance['parent']
+) {
+  mountElement(vnode, container, parentComponent);
 
   // todo: update
 }
 
-function mountElement(vnode: VNode, container: Element) {
+function mountElement(
+  vnode: VNode,
+  container: Element,
+  parentComponent: ComponentInternalInstance['parent']
+) {
   const el = (vnode.el = document.createElement(vnode.type as string));
 
   const { children, props, shapeFlag } = vnode;
@@ -85,7 +101,7 @@ function mountElement(vnode: VNode, container: Element) {
   if (shapeFlag & ShapeFlags.TEXT_CHILDREN) {
     el.textContent = children as string;
   } else if (shapeFlag & ShapeFlags.ARRAY_CHILDREN) {
-    mountChildren(vnode, el);
+    mountChildren(vnode, el, parentComponent);
   }
 
   // props
@@ -107,23 +123,35 @@ function getEventName(key: string) {
   return key.slice(2).toLowerCase();
 }
 
-function mountChildren(vnode: VNode, container: Element) {
+function mountChildren(
+  vnode: VNode,
+  container: Element,
+  parentComponent: ComponentInternalInstance['parent']
+) {
   const children = vnode.children as VNode[];
 
   children.forEach((v) => {
-    path(v, container);
+    path(v, container, parentComponent);
   });
 }
 
 /**
  * @description 处理组件
  */
-function processComponent(vnode: VNodeComponent, container: Element) {
-  mountComponent(vnode, container);
+function processComponent(
+  vnode: VNodeComponent,
+  container: Element,
+  parentComponents: ComponentInternalInstance['parent']
+) {
+  mountComponent(vnode, container, parentComponents);
 }
 
-function mountComponent(initialVNode: VNodeComponent, container: Element) {
-  const instance = createComponentInstance(initialVNode);
+function mountComponent(
+  initialVNode: VNodeComponent,
+  container: Element,
+  parentComponent: ComponentInternalInstance['parent']
+) {
+  const instance = createComponentInstance(initialVNode, parentComponent);
 
   setupComponent(instance);
   setupRenderEffect(instance, initialVNode, container);
@@ -139,7 +167,7 @@ function setupRenderEffect(
   const subTree = instance.render!.call(proxy);
 
   // 递归处理 subTree
-  path(subTree, container);
+  path(subTree, container, instance);
 
   // el 一定存在: 递归处理 subTree 时，会将 subTree.el 赋值 (最后一个根节点一定是 Element, 否则就无限循环了)
   initialVNode.el = subTree.el;

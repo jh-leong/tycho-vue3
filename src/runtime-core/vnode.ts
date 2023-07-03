@@ -1,7 +1,14 @@
 import { ShapeFlags } from '../shared/shapeFlags';
 import { SlotProps } from './helper/renderSlots';
 
+/**
+ * @description vnode 的类型, 渲染使用组件时注入的插槽
+ */
 export const FRAGMENT = Symbol('FRAGMENT');
+
+/**
+ * @description vnode 的类型, 渲染文本 textNode
+ */
 export const CREATE_TEXT = Symbol('CREATE_TEXT');
 
 export type VNode = VNodeString | VNodeComponent | VNodeFragment | VNodeText;

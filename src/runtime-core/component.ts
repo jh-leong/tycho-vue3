@@ -21,12 +21,15 @@ export type ComponentInternalInstance = {
   props: VNodeProps;
   emit: Function;
   slots: ComponentSlots;
+  parent: ComponentInternalInstance | null;
+  provides: Record<PropertyKey, unknown>;
   render?: RenderFunction;
   proxy?: { instance: ComponentInternalInstance };
 };
 
 export function createComponentInstance(
-  vnode: VNodeComponent
+  vnode: VNodeComponent,
+  parent: ComponentInternalInstance['parent'] = null
 ): ComponentInternalInstance {
   const componentInstance: ComponentInternalInstance = {
     vnode,
@@ -34,10 +37,12 @@ export function createComponentInstance(
     setupState: {},
     props: {},
     slots: {},
+    parent,
+    provides: parent?.provides || {},
     emit: () => {},
   };
 
-  componentInstance.emit = emit.bind(null, componentInstance) as any;
+  componentInstance.emit = emit.bind(null, componentInstance);
 
   return componentInstance;
 }

@@ -1,4 +1,36 @@
-import { h, renderSlots, getCurrentInstance } from '../../lib/tycho-vue.esm.js';
+import {
+  h,
+  inject,
+  provide,
+  renderSlots,
+  getCurrentInstance,
+  createTextVNode,
+} from '../../lib/tycho-vue.esm.js';
+
+const FooChild = {
+  name: 'FooChild',
+  setup() {
+    const AppProvide = inject('AppProvide');
+    const AppProvide2 = inject('AppProvide2');
+
+    const provide1 = inject('provide1', 'defaultProvide1');
+    const provide2 = inject('provide1', () => 'defaultProvide2');
+
+    const instance = getCurrentInstance();
+    console.warn('🚀\n ~ file: FooChild.js:15 ~ setup ~ instance:', instance);
+
+    return { AppProvide, AppProvide2, provide1, provide2 };
+  },
+  render() {
+    return h(
+      'div',
+      {},
+      `FooChild inject [AppProvide - ${this.AppProvide}], [AppProvide2 - ${
+        this.AppProvide2
+      }], [${this.provide1 + ' ' + this.provide2}]`
+    );
+  },
+};
 
 /**
  * 组件 Foo
@@ -6,9 +38,6 @@ import { h, renderSlots, getCurrentInstance } from '../../lib/tycho-vue.esm.js';
 export const Foo = {
   name: 'ComponentFoo',
   setup(props, { emit }) {
-    // props is readonly
-    console.warn('🚀\n ~ file: ComponentFoo.js:5 ~ setup ~ props:', props);
-
     const instance = getCurrentInstance();
     console.warn(
       '🚀\n ~ file: ComponentFoo.js:13 ~ setup ~ instance:',
@@ -23,8 +52,12 @@ export const Foo = {
 
     const inject2Slot = 'inject2Slot';
 
+    provide('AppProvide2', 'fromComponentFoo');
+    const AppProvide2 = inject('AppProvide2');
+
     return {
       emitAdd,
+      AppProvide2,
       inject2Slot,
     };
   },
@@ -58,6 +91,8 @@ export const Foo = {
           slot1ScopeValue: this.inject2Slot,
         }),
         renderSlots(this.$slots, 'slot2'),
+        createTextVNode(`Foo inject [AppProvide2 - ${this.AppProvide2}]`),
+        h(FooChild),
       ]
     );
   },

@@ -1,5 +1,6 @@
 import {
   h,
+  provide,
   createTextVNode,
   getCurrentInstance,
 } from '../../lib/tycho-vue.esm.js';
@@ -14,6 +15,9 @@ export const App = {
     const onAddFooFoo = (a, b) => {
       this.count += a + b;
     };
+
+    provide('AppProvide', 'fromApp');
+    provide('AppProvide2', 'fromApp');
 
     return {
       msg: 'tycho-vue',
