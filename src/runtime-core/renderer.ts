@@ -18,7 +18,7 @@ import {
  * @description render 函数的作用是将 vnode 渲染到 container 中
  */
 export function render(vnode: VNode, container: Element) {
-  path(vnode, container);
+  patch(vnode, container);
 }
 
 function isComponent(vnode: VNode): vnode is VNodeComponent {
@@ -29,10 +29,10 @@ function isComponent(vnode: VNode): vnode is VNodeComponent {
 /**
  * @description
  *
- * path 的作用是根据 vnode 的类型，调用不同的处理函数
+ * patch 的作用是根据 vnode 的类型，调用不同的处理函数
  * 递归处理 vnode, 直到 vnode 的类型是 element, 最后挂载到 container 中
  */
-function path(
+function patch(
   vnode: VNode,
   container: Element,
   parentComponent: ComponentInternalInstance['parent'] = null
@@ -131,7 +131,7 @@ function mountChildren(
   const children = vnode.children as VNode[];
 
   children.forEach((v) => {
-    path(v, container, parentComponent);
+    patch(v, container, parentComponent);
   });
 }
 
@@ -167,7 +167,7 @@ function setupRenderEffect(
   const subTree = instance.render!.call(proxy);
 
   // 递归处理 subTree
-  path(subTree, container, instance);
+  patch(subTree, container, instance);
 
   // el 一定存在: 递归处理 subTree 时，会将 subTree.el 赋值 (最后一个根节点一定是 Element, 否则就无限循环了)
   initialVNode.el = subTree.el;
