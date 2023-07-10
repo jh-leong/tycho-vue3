@@ -1,3 +1,5 @@
+import { effect } from '../reactivity/effect';
+import { EMPTY_OBJ } from '../shared';
 import { ShapeFlags } from '../shared/shapeFlags';
 import {
   setupComponent,
@@ -11,13 +13,14 @@ import {
   VNode,
   VNodeComponent,
   VNodeFragment,
+  VNodeProps,
   VNodeString,
   VNodeText,
 } from './vnode';
 
 export interface RendererOptions {
   insert(el: Element, parent: Element): void;
-  patchProp(el: Element, key: PropertyKey, val: unknown): void;
+  patchProp(el: Element, key: PropertyKey, preVal: unknown, val: unknown): void;
   createElement(type: unknown): Element;
 }
 
@@ -38,7 +41,7 @@ export function createRenderer(options: RendererOptions) {
    * @description render 函数的作用是将 vnode 渲染到 container 中
    */
   function render(vnode: VNode, container: Element) {
-    patch(vnode, container);
+    patch(null, vnode, container);
   }
 
   function isComponent(vnode: VNode): vnode is VNodeComponent {
@@ -53,6 +56,7 @@ export function createRenderer(options: RendererOptions) {
    * 递归处理 vnode, 直到 vnode 的类型是 element, 最后挂载到 container 中
    */
   function patch(
+    preVnode: any,
     vnode: VNode,
     container: Element,
     parentComponent: ComponentInternalInstance['parent'] = null
@@ -61,27 +65,36 @@ export function createRenderer(options: RendererOptions) {
 
     switch (type) {
       case FRAGMENT:
-        processFragment(vnode, container, parentComponent);
+        processFragment(preVnode, vnode, container, parentComponent);
         break;
 
       case CREATE_TEXT:
-        processText(vnode, container);
+        processText(preVnode, vnode, container);
         break;
 
       default:
         // element
         if (shapeFlag & ShapeFlags.ELEMENT) {
-          processElement(vnode as VNodeString, container, parentComponent);
+          processElement(
+            preVnode,
+            vnode as VNodeString,
+            container,
+            parentComponent
+          );
         }
         // 传入的是一个组件
         else if (isComponent(vnode)) {
-          processComponent(vnode, container, parentComponent);
+          processComponent(preVnode, vnode, container, parentComponent);
         }
         break;
     }
   }
 
-  function processText(vnode: VNodeText, container: Element) {
+  function processText(
+    preVnode: VNodeText,
+    vnode: VNodeText,
+    container: Element
+  ) {
     const { children } = vnode;
     const textNode = document.createTextNode(children!);
     vnode.el = textNode;
@@ -89,6 +102,7 @@ export function createRenderer(options: RendererOptions) {
   }
 
   function processFragment(
+    preVnode: VNodeFragment | null,
     vnode: VNodeFragment,
     container: Element,
     parentComponent: ComponentInternalInstance['parent']
@@ -100,13 +114,55 @@ export function createRenderer(options: RendererOptions) {
    * @description 处理 element
    */
   function processElement(
+    preVnode: VNodeString | null,
     vnode: VNodeString,
     container: Element,
     parentComponent: ComponentInternalInstance['parent']
   ) {
-    mountElement(vnode, container, parentComponent);
+    if (preVnode) {
+      patchElement(preVnode, vnode, container, parentComponent);
+    } else {
+      mountElement(vnode, container, parentComponent);
+    }
+  }
 
-    // todo: update
+  function patchElement(
+    preVnode: VNodeString,
+    vnode: VNodeString,
+    container: Element,
+    parentComponent: ComponentInternalInstance['parent']
+  ) {
+    const { props: preProps = EMPTY_OBJ } = preVnode;
+    const { props: currProps = EMPTY_OBJ } = vnode;
+
+    patchProps(preProps, currProps, preVnode.el!);
+
+    vnode.el = preVnode.el;
+  }
+
+  function patchProps(
+    preProps: VNodeProps,
+    currProps: VNodeProps,
+    el: Element
+  ) {
+    if (preProps !== currProps) {
+      for (const key in currProps) {
+        const preVal = preProps[key];
+        const currVal = currProps[key];
+
+        if (preVal !== currVal) {
+          _patchProp(el, key, preVal, currVal);
+        }
+      }
+
+      if (preProps !== EMPTY_OBJ) {
+        for (const key in preProps) {
+          if (!(key in currProps)) {
+            _patchProp(el, key, preProps[key], null);
+          }
+        }
+      }
+    }
   }
 
   function mountElement(
@@ -129,7 +185,7 @@ export function createRenderer(options: RendererOptions) {
     for (const key in props) {
       const val = props[key];
 
-      _patchProp(el, key, val);
+      _patchProp(el, key, null, val);
     }
 
     _insert(el, container);
@@ -143,7 +199,7 @@ export function createRenderer(options: RendererOptions) {
     const children = vnode.children as VNode[];
 
     children.forEach((v) => {
-      patch(v, container, parentComponent);
+      patch(null, v, container, parentComponent);
     });
   }
 
@@ -151,6 +207,7 @@ export function createRenderer(options: RendererOptions) {
    * @description 处理组件
    */
   function processComponent(
+    preVnode: VNodeComponent | null,
     vnode: VNodeComponent,
     container: Element,
     parentComponents: ComponentInternalInstance['parent']
@@ -174,15 +231,28 @@ export function createRenderer(options: RendererOptions) {
     initialVNode: VNode,
     container: Element
   ) {
-    const { proxy } = instance;
+    effect(() => {
+      if (instance.isMounted) {
+        const { proxy } = instance;
 
-    const subTree = instance.render!.call(proxy);
+        const preSubTree = instance.subTree;
+        const subTree = (instance.subTree = instance.render!.call(proxy));
 
-    // 递归处理 subTree
-    patch(subTree, container, instance);
+        patch(preSubTree!, subTree, container, instance);
+      } else {
+        const { proxy } = instance;
 
-    // el 一定存在: 递归处理 subTree 时，会将 subTree.el 赋值 (最后一个根节点一定是 Element, 否则就无限循环了)
-    initialVNode.el = subTree.el;
+        const subTree = (instance.subTree = instance.render!.call(proxy));
+
+        // 递归处理 subTree
+        patch(null, subTree, container, instance);
+
+        // el 一定存在: 递归处理 subTree 时，会将 subTree.el 赋值 (最后一个根节点一定是 Element, 否则就无限循环了)
+        initialVNode.el = subTree.el;
+
+        instance.isMounted = true;
+      }
+    });
 
     /**
      * todo:

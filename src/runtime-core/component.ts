@@ -1,3 +1,4 @@
+import { proxyRefs } from '../reactivity';
 import { shallowReadonly } from '../reactivity/reactive';
 import { emit } from './componentEmit';
 import { PublicInstanceHandlers } from './componentPublicInstance';
@@ -23,8 +24,10 @@ export type ComponentInternalInstance = {
   slots: ComponentSlots;
   parent: ComponentInternalInstance | null;
   provides: Record<PropertyKey, unknown>;
+  isMounted: boolean;
   render?: RenderFunction;
   proxy?: { instance: ComponentInternalInstance };
+  subTree?: VNode;
 };
 
 export function createComponentInstance(
@@ -40,6 +43,7 @@ export function createComponentInstance(
     parent,
     provides: parent?.provides || {},
     emit: () => {},
+    isMounted: false,
   };
 
   componentInstance.emit = emit.bind(null, componentInstance);
@@ -91,8 +95,9 @@ function handleSetupResult(
   setupResult: any
 ) {
   if (typeof setupResult === 'object') {
-    instance.setupState = setupResult;
+    instance.setupState = proxyRefs(setupResult);
   }
+
   // todo if setupResult is function
 
   finishComponentSetup(instance);

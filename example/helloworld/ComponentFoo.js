@@ -17,7 +17,6 @@ const FooChild = {
     const provide2 = inject('provide1', () => 'defaultProvide2');
 
     const instance = getCurrentInstance();
-    console.warn('🚀\n ~ file: FooChild.js:15 ~ setup ~ instance:', instance);
 
     return { AppProvide, AppProvide2, provide1, provide2 };
   },
@@ -39,10 +38,6 @@ export const Foo = {
   name: 'ComponentFoo',
   setup(props, { emit }) {
     const instance = getCurrentInstance();
-    console.warn(
-      '🚀\n ~ file: ComponentFoo.js:13 ~ setup ~ instance:',
-      instance
-    );
 
     const emitAdd = () => {
       console.log('inEmitAdd');

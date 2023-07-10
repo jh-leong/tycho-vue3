@@ -7,12 +7,16 @@ function createElement(type) {
   return document.createElement(type);
 }
 
-function patchProp(el: Element, key: string, val) {
+function patchProp(el: Element, key: string, preVal, val) {
   const isOn = (key: string) => /^on[A-Z]/.test(key);
   if (isOn(key)) {
     el.addEventListener(getEventName(key), val);
   } else {
-    el.setAttribute(key, val);
+    if (val == null) {
+      el.removeAttribute(key);
+    } else {
+      el.setAttribute(key, val);
+    }
   }
 }
 

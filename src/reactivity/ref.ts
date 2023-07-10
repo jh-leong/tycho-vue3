@@ -54,7 +54,7 @@ function trackRefValue(ref: RefImpl) {
 }
 
 export function isRef(ref) {
-  return !!ref.__v_isRef;
+  return !!ref?.__v_isRef;
 }
 
 /**
@@ -82,6 +82,9 @@ const shallowUnwrapHandlers: ProxyHandler<any> = {
   },
 };
 
+/**
+ * @description 代理对象, 使 render 函数中可以直接访问 setup 返回值解包后的结果
+ */
 export function proxyRefs<T extends object>(objectWithRefs: T) {
   return new Proxy(objectWithRefs, shallowUnwrapHandlers);
 }
