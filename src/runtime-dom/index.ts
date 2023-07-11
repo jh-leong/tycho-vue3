@@ -28,10 +28,24 @@ function insert(el: Element, container: Element) {
   container.append(el);
 }
 
+function unmount(el: Element) {
+  const parent = el.parentElement;
+
+  if (parent) {
+    parent.removeChild(el);
+  }
+}
+
+function setElementTExt(el: Element, text: string) {
+  el.textContent = text;
+}
+
 const renderer = createRenderer({
   insert,
   patchProp,
   createElement,
+  unmount,
+  setElementTExt,
 });
 
 export function createApp(args: Component) {

@@ -3,7 +3,7 @@ import {
   ref,
   provide,
   createTextVNode,
-  // getCurrentInstance,
+  getCurrentInstance,
 } from '../../lib/tycho-vue.esm.js';
 import { Foo } from './ComponentFoo.js';
 
