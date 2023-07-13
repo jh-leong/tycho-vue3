@@ -37,6 +37,36 @@ const Text2Array = {
   },
 };
 
+const PatchChild = {
+  name: 'PatchChild',
+  setup() {
+    const toggleChild = ref(true);
+    window.toggleChild = toggleChild;
+    return {
+      toggleChild,
+    };
+  },
+  render() {
+    const child = this.toggleChild
+      ? [
+          h('p', { key: 'A' }, 'A'),
+          h('p', { key: 'B' }, 'B'),
+          h('p', { key: 'C' }, 'C'),
+          h('p', { key: 'D' }, 'D'),
+          h('p', { key: 'E' }, 'E'),
+        ]
+      : [
+          h('p', { key: 'A' }, 'A'),
+          h('p', { key: 'B' }, 'B'),
+          h('p', { key: 'C' }, 'C'),
+          // h('p', { key: 'D' }, 'D'),
+          // h('p', { key: 'E' }, 'E'),
+        ];
+
+    return h('div', {}, child);
+  },
+};
+
 export const App = {
   name: 'App',
   setup() {
@@ -48,7 +78,12 @@ export const App = {
       window.text2Array.value = !window.text2Array.value;
     };
 
+    const toggleChild = () => {
+      window.toggleChild.value = !window.toggleChild.value;
+    };
+
     return {
+      toggleChild,
       toggleText2text,
       toggleText2array,
     };
@@ -73,6 +108,8 @@ export const App = {
         ),
         h(Text2Array, { class: ['p-24'] }),
         h(Text2text, { class: ['p-24'] }),
+        h('button', { onClick: () => this.toggleChild() }, 'toggleChild'),
+        h(PatchChild, { class: ['p-24'] }),
       ]
     );
   },

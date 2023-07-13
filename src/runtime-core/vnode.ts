@@ -15,6 +15,7 @@ export type VNode = VNodeString | VNodeComponent | VNodeFragment | VNodeText;
 
 interface VNodeBase {
   shapeFlag: ShapeFlags;
+  key?: string;
   props?: VNodeProps;
 }
 
@@ -63,6 +64,7 @@ export function createVNode<T extends VNode['type'], V = VNode>(
     props,
     type,
     children,
+    key: props?.key,
   } as VNode;
 
   if (typeof children === 'string') {

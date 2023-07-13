@@ -24,8 +24,8 @@ function getEventName(key: string) {
   return key.slice(2).toLowerCase();
 }
 
-function insert(el: Element, container: Element) {
-  container.append(el);
+function insert(el: Element, container: Element, anchor: Element) {
+  container.insertBefore(el, anchor || null);
 }
 
 function unmount(el: Element) {
