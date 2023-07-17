@@ -211,7 +211,7 @@ export function createRenderer(options: RendererOptions) {
       const n1 = preChildren[i];
       const n2 = children[i];
 
-      if (!isSomeVnodeType(n1, n2)) break;
+      if (!isSameVnodeType(n1, n2)) break;
 
       patch(n1, n2, container, parentComponent, parentAnchor);
       i++;
@@ -222,7 +222,7 @@ export function createRenderer(options: RendererOptions) {
       const n1 = preChildren[e1];
       const n2 = children[e2];
 
-      if (!isSomeVnodeType(n1, n2)) break;
+      if (!isSameVnodeType(n1, n2)) break;
 
       patch(n1, n2, container, parentComponent, parentAnchor);
       e1--;
@@ -237,7 +237,7 @@ export function createRenderer(options: RendererOptions) {
      * (a b) c
      *
      * - inset in the start
-     * a b)
+     * (a b)
      * c (a b)
      */
     if (i > e1 && i <= e2) {
@@ -263,9 +263,59 @@ export function createRenderer(options: RendererOptions) {
         _unmount(preChildren[i].el!);
         i++;
       }
+    } else {
+      /**
+       * 5. unknown sequence
+       * matching nodes & remove nodes that are no longer present
+       */
+      let s1 = i;
+      let s2 = i;
+
+      let patched = 0;
+      const toBePatched = e2 - i + 1;
+      const keyToNewIndexMap = new Map();
+
+      for (let i = s2; i <= e2; i++) {
+        keyToNewIndexMap.set(children[i].key, i);
+      }
+
+      for (let i = s1; i <= e1; i++) {
+        const preVNode = preChildren[i];
+
+        if (patched > toBePatched) {
+          _unmount(preVNode.el!);
+          continue;
+        }
+
+        let newIndex;
+
+        if (preVNode.key != null) {
+          newIndex = keyToNewIndexMap.get(preVNode.key);
+        } else {
+          for (let j = s2; j <= e2; j++) {
+            if (isSameVnodeType(preVNode, children[j])) {
+              newIndex = j;
+              break;
+            }
+          }
+        }
+
+        if (newIndex === undefined) {
+          _unmount(preVNode.el!);
+        } else {
+          patch(
+            preVNode,
+            children[newIndex],
+            container,
+            parentComponent,
+            parentAnchor
+          );
+          patched++;
+        }
+      }
     }
 
-    function isSomeVnodeType(n1: VNode, n2: VNode) {
+    function isSameVnodeType(n1: VNode, n2: VNode) {
       return n1.type === n2.type && n1.key === n2.key;
     }
   }

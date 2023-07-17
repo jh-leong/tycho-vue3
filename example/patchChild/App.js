@@ -51,16 +51,18 @@ const PatchChild = {
       ? [
           h('p', { key: 'A' }, 'A'),
           h('p', { key: 'B' }, 'B'),
-          h('p', { key: 'C' }, 'C'),
           h('p', { key: 'D' }, 'D'),
+          h('p', { key: 'C' }, 'C'),
           h('p', { key: 'E' }, 'E'),
+          h('p', { key: 'F' }, 'F'),
         ]
       : [
           h('p', { key: 'A' }, 'A'),
           h('p', { key: 'B' }, 'B'),
           h('p', { key: 'C' }, 'C'),
-          // h('p', { key: 'D' }, 'D'),
+          h('p', { key: 'D' }, 'D'),
           // h('p', { key: 'E' }, 'E'),
+          h('p', { key: 'F' }, 'F'),
         ];
 
     return h('div', {}, child);
