@@ -19,7 +19,7 @@ import {
 } from './vnode';
 
 export interface RendererOptions {
-  insert(el: Element, parent: Element, anchor: Element | Text | null): void;
+  insert(el: Element, parent: Element, anchor?: Element | Text | null): void;
   patchProp(el: Element, key: PropertyKey, preVal: unknown, val: unknown): void;
   createElement(type: unknown): Element;
   unmount(el: Element | Text): void;
@@ -275,6 +275,17 @@ export function createRenderer(options: RendererOptions) {
       const toBePatched = e2 - i + 1;
       const keyToNewIndexMap = new Map();
 
+      /**
+       * 0 for node to be mounted
+       */
+      const newIndexToOldIndexMap = new Array<number>(toBePatched).fill(0);
+
+      /**
+       * true: node has been moved
+       */
+      let moved = false;
+      let preNewIndex = 0;
+
       for (let i = s2; i <= e2; i++) {
         keyToNewIndexMap.set(children[i].key, i);
       }
@@ -287,7 +298,7 @@ export function createRenderer(options: RendererOptions) {
           continue;
         }
 
-        let newIndex;
+        let newIndex: number | undefined;
 
         if (preVNode.key != null) {
           newIndex = keyToNewIndexMap.get(preVNode.key);
@@ -300,9 +311,18 @@ export function createRenderer(options: RendererOptions) {
           }
         }
 
+        // no matching node
         if (newIndex === undefined) {
           _unmount(preVNode.el!);
         } else {
+          if (newIndex >= preNewIndex) {
+            preNewIndex = newIndex;
+          } else {
+            moved = true;
+          }
+
+          newIndexToOldIndexMap[newIndex - s2] = i + 1;
+
           patch(
             preVNode,
             children[newIndex],
@@ -311,6 +331,31 @@ export function createRenderer(options: RendererOptions) {
             parentAnchor
           );
           patched++;
+        }
+      }
+
+      const increasingNewIndexSequence = moved
+        ? getSequence(newIndexToOldIndexMap)
+        : [];
+
+      // looping backwards so that we can use last patched node as anchor
+      for (
+        let i = toBePatched - 1, j = increasingNewIndexSequence.length - 1;
+        i >= 0;
+        i--
+      ) {
+        const childIndex = i + s2;
+        const el = children[childIndex].el as Element;
+        const anchor = children[childIndex + 1]?.el;
+
+        if (newIndexToOldIndexMap[i] === 0) {
+          patch(null, children[childIndex], container, parentComponent, anchor);
+        } else if (moved) {
+          if (j < 0 || i !== increasingNewIndexSequence[j]) {
+            _insert(el, container, anchor);
+          } else {
+            j--;
+          }
         }
       }
     }
@@ -454,4 +499,45 @@ export function createRenderer(options: RendererOptions) {
      * 目前只支持监听组件的 emit 事件
      */
   }
+}
+
+function getSequence(arr) {
+  const p = arr.slice();
+  const result = [0];
+  let i, j, u, v, c;
+  const len = arr.length;
+  for (i = 0; i < len; i++) {
+    const arrI = arr[i];
+    if (arrI !== 0) {
+      j = result[result.length - 1];
+      if (arr[j] < arrI) {
+        p[i] = j;
+        result.push(i);
+        continue;
+      }
+      u = 0;
+      v = result.length - 1;
+      while (u < v) {
+        c = (u + v) >> 1;
+        if (arr[result[c]] < arrI) {
+          u = c + 1;
+        } else {
+          v = c;
+        }
+      }
+      if (arrI < arr[result[u]]) {
+        if (u > 0) {
+          p[i] = result[u - 1];
+        }
+        result[u] = i;
+      }
+    }
+  }
+  u = result.length;
+  v = result[u - 1];
+  while (u-- > 0) {
+    result[u] = v;
+    v = p[v];
+  }
+  return result;
 }

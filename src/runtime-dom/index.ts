@@ -24,7 +24,10 @@ function getEventName(key: string) {
   return key.slice(2).toLowerCase();
 }
 
-function insert(el: Element, container: Element, anchor: Element) {
+/**
+ * move or insert element before anchor
+ */
+function insert(el: Element, container: Element, anchor?: Element) {
   container.insertBefore(el, anchor || null);
 }
 
