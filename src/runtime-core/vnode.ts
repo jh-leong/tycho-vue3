@@ -1,4 +1,5 @@
 import { ShapeFlags } from '../shared/shapeFlags';
+import { ComponentInternalInstance } from './component';
 import { SlotProps } from './helper/renderSlots';
 
 /**
@@ -28,6 +29,7 @@ export interface VNodeString extends VNodeBase {
 export interface VNodeComponent extends VNodeBase {
   type: Component;
   el: Element | null;
+  component?: ComponentInternalInstance;
   children?: Record<string, (props?: SlotProps) => VNode[] | VNode>;
 }
 

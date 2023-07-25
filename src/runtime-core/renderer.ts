@@ -6,6 +6,7 @@ import {
   createComponentInstance,
   ComponentInternalInstance,
 } from './component';
+import { shouldUpdateComponent } from './componentUpdateUtils';
 import { createAppAPI } from './createApp';
 import {
   CREATE_TEXT,
@@ -449,7 +450,11 @@ export function createRenderer(options: RendererOptions) {
     parentComponents: ComponentInternalInstance['parent'],
     anchor: Element | Text | null
   ) {
-    mountComponent(vnode, container, parentComponents, anchor);
+    if (preVnode) {
+      updateComponent(preVnode, vnode);
+    } else {
+      mountComponent(vnode, container, parentComponents, anchor);
+    }
   }
 
   function mountComponent(
@@ -458,10 +463,29 @@ export function createRenderer(options: RendererOptions) {
     parentComponent: ComponentInternalInstance['parent'],
     anchor: Element | Text | null
   ) {
-    const instance = createComponentInstance(initialVNode, parentComponent);
+    const instance = (initialVNode.component = createComponentInstance(
+      initialVNode,
+      parentComponent
+    ));
 
     setupComponent(instance);
     setupRenderEffect(instance, initialVNode, container, anchor);
+  }
+
+  /**
+   * @description 更新组件
+   * 重新调用 render 对比新旧 vnode, 更新组件
+   */
+  function updateComponent(preVnode: VNodeComponent, vnode: VNodeComponent) {
+    const instance = (vnode.component = preVnode.component!);
+
+    if (shouldUpdateComponent(preVnode, vnode)) {
+      instance.next = vnode;
+      instance.update!();
+    } else {
+      vnode.el = preVnode.el;
+      instance.vnode = vnode;
+    }
   }
 
   function setupRenderEffect(
@@ -470,34 +494,45 @@ export function createRenderer(options: RendererOptions) {
     container: Element,
     anchor: Element | Text | null
   ) {
-    effect(() => {
-      if (instance.isMounted) {
-        const { proxy } = instance;
-
-        const preSubTree = instance.subTree;
-        const subTree = (instance.subTree = instance.render!.call(proxy));
-
-        patch(preSubTree!, subTree, container, instance, anchor);
-      } else {
-        const { proxy } = instance;
-
-        const subTree = (instance.subTree = instance.render!.call(proxy));
+    instance.update = effect(() => {
+      if (!instance.isMounted) {
+        instance.subTree = instance.render!.call(instance.proxy);
 
         // 递归处理 subTree
-        patch(null, subTree, container, instance, anchor);
+        patch(null, instance.subTree, container, instance, anchor);
 
-        // el 一定存在: 递归处理 subTree 时，会将 subTree.el 赋值 (最后一个根节点一定是 Element, 否则就无限循环了)
-        initialVNode.el = subTree.el;
+        // el 一定存在: 递归处理 subTree 时，会将 subTree.el 赋值
+        // 最后一个根节点一定是 Element, 否则就无限循环了
+        initialVNode.el = instance.subTree.el;
 
         instance.isMounted = true;
+
+        return;
       }
+
+      const { next, vnode, subTree: preSubTree } = instance;
+
+      if (next) {
+        next.el = vnode.el;
+        updateComponentPreRender(instance, next);
+      }
+
+      instance.subTree = instance.render!.call(instance.proxy);
+
+      patch(preSubTree!, instance.subTree, container, instance, anchor);
     });
 
     /**
-     * todo:
-     * 支持在组件的 props 上传入事件监听, 在 el 上挂载 instance.props 上监听的事件
-     * 目前只支持监听组件的 emit 事件
+     * 更新组件 instance 的属性 vnode, props
      */
+    function updateComponentPreRender(
+      instance: ComponentInternalInstance,
+      nextVNode: VNodeComponent
+    ) {
+      instance.next = null;
+      instance.vnode = nextVNode;
+      instance.props = nextVNode.props || {};
+    }
   }
 }
 

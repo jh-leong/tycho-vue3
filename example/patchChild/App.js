@@ -76,6 +76,20 @@ const PatchChild = {
   },
 };
 
+const PatchComponent = {
+  name: 'PatchComponent',
+  setup() {
+    //
+  },
+  render() {
+    return h(
+      'div',
+      {},
+      'PatchComponent > this.$props.msg > ' + this.$props.msg
+    );
+  },
+};
+
 export const App = {
   name: 'App',
   setup() {
@@ -91,10 +105,26 @@ export const App = {
       window.toggleChild.value = !window.toggleChild.value;
     };
 
+    const msg = ref('0');
+
+    const togglePatchComponent = () => {
+      msg.value = Math.random();
+    };
+    togglePatchComponent();
+
+    const count = ref(0);
+    const increaseCount = () => {
+      count.value++;
+    };
+
     return {
       toggleChild,
       toggleText2text,
       toggleText2array,
+      msg,
+      togglePatchComponent,
+      count,
+      increaseCount,
     };
   },
   render() {
@@ -105,20 +135,19 @@ export const App = {
         class: 'red root_wrap',
       },
       [
+        // h('button', { onClick: this.toggleText2text }, 'toggleText2text'),
+        // h('button', { onClick: this.toggleText2array }, 'toggleText2array'),
+        // h(Text2Array, { class: ['p-24'] }),
+        // h(Text2text, { class: ['p-24'] }),
+        // h('button', { onClick: this.toggleChild }, 'toggleChild'),
+        // h(PatchChild, { class: ['p-24'] }),
         h(
           'button',
-          { onClick: () => this.toggleText2text() },
-          'toggleText2text'
+          { onClick: this.increaseCount },
+          'button updateCount => ' + this.count
         ),
-        h(
-          'button',
-          { onClick: () => this.toggleText2array() },
-          'toggleText2array'
-        ),
-        h(Text2Array, { class: ['p-24'] }),
-        h(Text2text, { class: ['p-24'] }),
-        h('button', { onClick: () => this.toggleChild() }, 'toggleChild'),
-        h(PatchChild, { class: ['p-24'] }),
+        h('button', { onClick: this.togglePatchComponent }, 'update msg'),
+        h(PatchComponent, { msg: this.msg }, { class: ['p-24'] }),
       ]
     );
   },

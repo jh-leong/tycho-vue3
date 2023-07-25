@@ -25,6 +25,9 @@ export type ComponentInternalInstance = {
   parent: ComponentInternalInstance | null;
   provides: Record<PropertyKey, unknown>;
   isMounted: boolean;
+  /** 新渲染的 vnode, 用于 diff 时和旧 vnode 做对比 */
+  next: VNodeComponent | null;
+  update: null | (() => void);
   render?: RenderFunction;
   proxy?: { instance: ComponentInternalInstance };
   subTree?: VNode;
@@ -44,6 +47,8 @@ export function createComponentInstance(
     provides: parent?.provides || {},
     emit: () => {},
     isMounted: false,
+    next: null,
+    update: null,
   };
 
   componentInstance.emit = emit.bind(null, componentInstance);
