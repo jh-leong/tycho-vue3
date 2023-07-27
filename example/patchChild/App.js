@@ -109,6 +109,7 @@ export const App = {
 
     const togglePatchComponent = () => {
       msg.value = Math.random();
+      msg.value = Math.random();
     };
     togglePatchComponent();
 
@@ -146,8 +147,12 @@ export const App = {
           { onClick: this.increaseCount },
           'button updateCount => ' + this.count
         ),
-        h('button', { onClick: this.togglePatchComponent }, 'update msg'),
-        h(PatchComponent, { msg: this.msg }, { class: ['p-24'] }),
+        h(
+          'button',
+          { onClick: this.togglePatchComponent },
+          'update msg =>' + this.msg
+        ),
+        // h(PatchComponent, { msg: this.msg }, { class: ['p-24'] }),
       ]
     );
   },

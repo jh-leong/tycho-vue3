@@ -8,6 +8,7 @@ import {
 } from './component';
 import { shouldUpdateComponent } from './componentUpdateUtils';
 import { createAppAPI } from './createApp';
+import { queueJobs } from './scheduler';
 import {
   CREATE_TEXT,
   FRAGMENT,
@@ -494,33 +495,40 @@ export function createRenderer(options: RendererOptions) {
     container: Element,
     anchor: Element | Text | null
   ) {
-    instance.update = effect(() => {
-      if (!instance.isMounted) {
+    instance.update = effect(
+      () => {
+        if (!instance.isMounted) {
+          instance.subTree = instance.render!.call(instance.proxy);
+
+          // 递归处理 subTree
+          patch(null, instance.subTree, container, instance, anchor);
+
+          // el 一定存在: 递归处理 subTree 时，会将 subTree.el 赋值
+          // 最后一个根节点一定是 Element, 否则就无限循环了
+          initialVNode.el = instance.subTree.el;
+
+          instance.isMounted = true;
+
+          return;
+        }
+
+        const { next, vnode, subTree: preSubTree } = instance;
+
+        if (next) {
+          next.el = vnode.el;
+          updateComponentPreRender(instance, next);
+        }
+
         instance.subTree = instance.render!.call(instance.proxy);
 
-        // 递归处理 subTree
-        patch(null, instance.subTree, container, instance, anchor);
-
-        // el 一定存在: 递归处理 subTree 时，会将 subTree.el 赋值
-        // 最后一个根节点一定是 Element, 否则就无限循环了
-        initialVNode.el = instance.subTree.el;
-
-        instance.isMounted = true;
-
-        return;
+        patch(preSubTree!, instance.subTree, container, instance, anchor);
+      },
+      {
+        scheduler() {
+          queueJobs(instance.update!);
+        },
       }
-
-      const { next, vnode, subTree: preSubTree } = instance;
-
-      if (next) {
-        next.el = vnode.el;
-        updateComponentPreRender(instance, next);
-      }
-
-      instance.subTree = instance.render!.call(instance.proxy);
-
-      patch(preSubTree!, instance.subTree, container, instance, anchor);
-    });
+    );
 
     /**
      * 更新组件 instance 的属性 vnode, props
