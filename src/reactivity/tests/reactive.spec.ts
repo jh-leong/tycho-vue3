@@ -14,6 +14,7 @@ describe('reactive', () => {
     expect(isProxy(observed)).toBe(true);
     expect(isProxy({})).toBe(false);
   });
+
   it('nested reactive', () => {
     const original = {
       nested: {
@@ -28,5 +29,21 @@ describe('reactive', () => {
     expect(isProxy(observed.nested)).toBe(true);
     expect(isProxy(observed.array)).toBe(true);
     expect(isProxy(observed.array[0])).toBe(true);
+  });
+
+  describe('Proxy Array', () => {
+    it('includes a raw element should be true', () => {
+      const foo = {};
+      const arr = reactive([foo]);
+
+      expect(arr.includes(foo)).toBe(true);
+    });
+
+    it('includes a proxy element should be true', () => {
+      const foo = {};
+      const arr = reactive([foo]);
+
+      expect(arr.includes(arr[0])).toBe(true);
+    });
   });
 });
