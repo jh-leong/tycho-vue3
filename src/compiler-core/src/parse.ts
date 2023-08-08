@@ -1,44 +1,13 @@
-import { NodeTypes } from './ast';
-
-export const enum TagType {
-  Start,
-  End,
-}
-
-interface RootNode {
-  children: ParserNode[];
-}
-
-type ParserNode =
-  | ElementNode
-  | TextNode
-  | InterpolationNode
-  | SimpleExpressionNode;
-
-interface ElementNode {
-  type: NodeTypes.ELEMENT;
-  tag: string;
-  children: ParserNode[];
-}
-
-interface TextNode {
-  type: NodeTypes.TEXT;
-  content: string;
-}
-
-interface InterpolationNode {
-  type: NodeTypes.INTERPOLATION;
-  content: SimpleExpressionNode;
-}
-
-interface SimpleExpressionNode {
-  type: NodeTypes.SIMPLE_EXPRESSION;
-  content: string;
-}
-
-interface ParserContext {
-  source: string;
-}
+import {
+  ElementNode,
+  InterpolationNode,
+  NodeTypes,
+  ParserContext,
+  RootNode,
+  TagType,
+  TemplateChildNode,
+  TextNode,
+} from './ast';
 
 export function baseParse(content: string) {
   const context = createParserContext(content);
@@ -50,11 +19,11 @@ export function baseParse(content: string) {
 function parseChildren(
   context: ParserContext,
   ancestors: ElementNode[]
-): ParserNode[] {
-  const nodes: ParserNode[] = [];
+): TemplateChildNode[] {
+  const nodes: TemplateChildNode[] = [];
 
   while (!isEnd(context, ancestors)) {
-    let node: ParserNode | undefined;
+    let node: TemplateChildNode | undefined;
 
     if (context.source.startsWith('{{')) {
       node = parseInterpolation(context);
@@ -181,8 +150,9 @@ function advanceBy(context: ParserContext, len: number) {
   context.source = context.source.slice(len);
 }
 
-function createRoot(children: ParserNode[]): RootNode {
+function createRoot(children: TemplateChildNode[]): RootNode {
   return {
+    type: NodeTypes.ROOT,
     children,
   };
 }
