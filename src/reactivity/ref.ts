@@ -5,7 +5,7 @@ import {
   trackEffects,
   triggerEffects,
 } from './effect';
-import { reactive } from './reactive';
+import { isReactive, reactive } from './reactive';
 
 class RefImpl {
   private _value: any;
@@ -15,8 +15,8 @@ class RefImpl {
    * 对象类型的值, 会被 reactive 包装 (变成 proxy 代理)
    */
   private _rawValue: any;
+  readonly __v_isRef = true;
   dep = new Set<ReactiveEffect>();
-  __v_isRef = true;
 
   constructor(value: any) {
     this.update(value);
@@ -86,4 +86,42 @@ const shallowUnwrapHandlers: ProxyHandler<any> = {
  */
 export function proxyRefs<T extends object>(objectWithRefs: T) {
   return new Proxy(objectWithRefs, shallowUnwrapHandlers);
+}
+
+export function toRefs(target: object) {
+  if (!isReactive(target)) {
+    console.warn(`toRefs() expects a reactive object`);
+    return target;
+  }
+
+  const res: any = {};
+
+  for (const key in target) {
+    res[key] = propertyToRef(target, key);
+  }
+
+  return res;
+}
+
+export function toRef(target, key: PropertyKey) {
+  return propertyToRef(target, key);
+}
+
+function propertyToRef(target, key: PropertyKey) {
+  const val = target[key];
+  return isRef(val) ? val : new ObjectRefImpl(target, key);
+}
+
+class ObjectRefImpl {
+  readonly __v_isRef = true;
+
+  constructor(public target: object, public key: PropertyKey) {}
+
+  get value() {
+    return this.target[this.key];
+  }
+
+  set value(newValue) {
+    this.target[this.key] = newValue;
+  }
 }
