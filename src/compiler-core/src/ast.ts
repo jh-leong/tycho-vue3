@@ -11,17 +11,17 @@ export const enum TagType {
   End,
 }
 
+export interface RootNode {
+  type: NodeTypes.ROOT;
+  children: TemplateChildNode[];
+  codegenNode?: TemplateChildNode;
+}
+
 export type TemplateChildNode =
-  | RootNode
   | ElementNode
   | TextNode
   | InterpolationNode
   | SimpleExpressionNode;
-
-export interface RootNode {
-  type: NodeTypes.ROOT;
-  children: TemplateChildNode[];
-}
 
 export interface ElementNode {
   type: NodeTypes.ELEMENT;
@@ -49,14 +49,14 @@ export interface ParserContext {
 }
 
 export interface TransformOptions {
-  nodeTransforms: NodeTransform;
+  nodeTransforms?: NodeTransform;
 }
 
 export interface TransformContext extends TransformOptions {
-  root: TemplateChildNode;
+  root: RootNode;
 }
 
 export type NodeTransform = ((
-  node: TemplateChildNode,
+  node: RootNode,
   context: TransformContext
 ) => void)[];

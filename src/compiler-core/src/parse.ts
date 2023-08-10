@@ -9,7 +9,7 @@ import {
   TextNode,
 } from './ast';
 
-export function baseParse(content: string) {
+export function baseParse(content: string): RootNode {
   const context = createParserContext(content);
   const root = createRoot(parseChildren(context, []));
 
