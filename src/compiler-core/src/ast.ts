@@ -15,6 +15,7 @@ export interface RootNode {
   type: NodeTypes.ROOT;
   children: TemplateChildNode[];
   codegenNode?: TemplateChildNode;
+  helpers?: symbol[];
 }
 
 export type TemplateChildNode =
@@ -23,6 +24,7 @@ export type TemplateChildNode =
   | InterpolationNode
   | SimpleExpressionNode;
 
+export type ParentNode = RootNode | ElementNode;
 export interface ElementNode {
   type: NodeTypes.ELEMENT;
   tag: string;
@@ -49,14 +51,16 @@ export interface ParserContext {
 }
 
 export interface TransformOptions {
-  nodeTransforms?: NodeTransform;
+  nodeTransforms?: NodeTransform[];
 }
 
 export interface TransformContext extends TransformOptions {
   root: RootNode;
+  helpers: Set<symbol>;
+  helper(name: symbol): symbol;
 }
 
-export type NodeTransform = ((
-  node: RootNode,
+export type NodeTransform = (
+  node: RootNode | TemplateChildNode,
   context: TransformContext
-) => void)[];
+) => void | (() => void) | (() => void)[];
