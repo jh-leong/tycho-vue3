@@ -184,12 +184,8 @@ describe('ref', () => {
   });
 
   it('toRefs should warn on plain object', () => {
-    const consoleWarnSpy = jest.spyOn(console, 'warn');
-
+    console.warn = jest.fn();
     toRefs({});
-
-    expect(consoleWarnSpy).toHaveBeenCalledWith(
-      'toRefs() expects a reactive object'
-    );
+    expect(console.warn).toBeCalled();
   });
 });

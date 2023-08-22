@@ -1,9 +1,12 @@
+import { CREATE_ELEMENT_VNODE } from './runtimeHelpers';
+
 export const enum NodeTypes {
   ROOT,
   SIMPLE_EXPRESSION,
   INTERPOLATION,
   ELEMENT,
   TEXT,
+  COMPOUND_EXPRESSION,
 }
 
 export const enum TagType {
@@ -22,13 +25,22 @@ export type TemplateChildNode =
   | ElementNode
   | TextNode
   | InterpolationNode
+  | CompoundExpressionNode
   | SimpleExpressionNode;
+
+export interface CompoundExpressionNode {
+  type: NodeTypes.COMPOUND_EXPRESSION;
+  // children: (SimpleExpressionNode | CompoundExpressionNode)[];
+  children: (TextNode | InterpolationNode | string)[];
+}
 
 export type ParentNode = RootNode | ElementNode;
 export interface ElementNode {
   type: NodeTypes.ELEMENT;
   tag: string;
-  children: TemplateChildNode[];
+  children: any;
+  props?: string[];
+  codegenNode?: any;
 }
 
 export interface TextNode {
@@ -64,3 +76,19 @@ export type NodeTransform = (
   node: RootNode | TemplateChildNode,
   context: TransformContext
 ) => void | (() => void) | (() => void)[];
+
+export function createVNodeCall(
+  context: TransformContext,
+  tag: string,
+  props: any,
+  children: any
+) {
+  context.helper(CREATE_ELEMENT_VNODE);
+
+  return {
+    type: NodeTypes.ELEMENT as const,
+    tag: `"${tag}"`,
+    props: props,
+    children: children,
+  };
+}

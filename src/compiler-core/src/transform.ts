@@ -1,3 +1,4 @@
+import { isArray } from '../../shared';
 import {
   ParentNode,
   NodeTypes,
@@ -17,7 +18,13 @@ export function transform(root: RootNode, options: TransformOptions) {
 }
 
 function createRootCodegen(root: RootNode) {
-  root.codegenNode = root.children[0];
+  const child = root.children[0];
+
+  if (child.type === NodeTypes.ELEMENT) {
+    root.codegenNode = child.codegenNode;
+  } else {
+    root.codegenNode = child;
+  }
 }
 
 function createTransformContext(
@@ -43,9 +50,12 @@ function traverseNode(
 ) {
   const { nodeTransforms = [] } = context;
 
+  const exitFns: any = [];
   for (let i = 0; i < nodeTransforms.length; i++) {
     const transform = nodeTransforms[i];
-    transform(node, context);
+    const onExit = transform(node, context);
+
+    if (onExit) exitFns.push(onExit);
   }
 
   switch (node.type) {
@@ -60,13 +70,18 @@ function traverseNode(
     default:
       break;
   }
+
+  let i = exitFns.length;
+  while (i--) exitFns[i]();
 }
 
 function traverseChildren(parent: ParentNode, context: TransformContext) {
   const children = parent.children;
 
-  for (let i = 0; i < children.length; i++) {
-    const childNode = children[i];
-    traverseNode(childNode, context);
+  if (isArray(children)) {
+    for (let i = 0; i < children.length; i++) {
+      const childNode = children[i];
+      traverseNode(childNode, context);
+    }
   }
 }

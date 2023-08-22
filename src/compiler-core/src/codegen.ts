@@ -1,4 +1,7 @@
+import { isString } from '../../shared';
 import {
+  CompoundExpressionNode,
+  ElementNode,
   InterpolationNode,
   NodeTypes,
   RootNode,
@@ -6,7 +9,11 @@ import {
   TemplateChildNode,
   TextNode,
 } from './ast';
-import { TO_DISPLAY_STRING, helperMapName } from './runtimeHelpers';
+import {
+  CREATE_ELEMENT_VNODE,
+  TO_DISPLAY_STRING,
+  helperMapName,
+} from './runtimeHelpers';
 
 export function generate(ast: RootNode) {
   const context = createCodegenContext();
@@ -18,10 +25,10 @@ export function generate(ast: RootNode) {
   const args = ['_ctx', '_cache'];
   const signature = args.join(', ');
 
-  push(`function ${functionName}(${signature}) {`);
-  push('return ');
+  push(`function ${functionName}(${signature}) {\n`);
+  push('\treturn ');
   genNode(ast.codegenNode!, context);
-  push('}');
+  push('\n}');
 
   return {
     code: context.code,
@@ -74,9 +81,64 @@ function genNode(node: TemplateChildNode, context: CodegenContext) {
     case NodeTypes.SIMPLE_EXPRESSION:
       genExpression(node, context);
       break;
+    case NodeTypes.ELEMENT:
+      genElement(node, context);
+      break;
+    case NodeTypes.COMPOUND_EXPRESSION:
+      genCompoundExpression(node, context);
+      break;
 
     default:
       break;
+  }
+}
+
+function genElement(node: ElementNode, context: CodegenContext) {
+  const { push, helper } = context;
+  const { tag, children, props } = node;
+
+  push(`${helper(CREATE_ELEMENT_VNODE)}(`);
+  genNodeList(genNullable([tag, props, children]), context);
+  push(')');
+}
+
+function genNodeList(nodes: any[], context: CodegenContext) {
+  const { push } = context;
+
+  for (let i = 0; i < nodes.length; i++) {
+    const node = nodes[i];
+
+    if (isString(node)) {
+      push(node);
+    } else {
+      genNode(node, context);
+    }
+
+    if (i < nodes.length - 1) {
+      push(', ');
+    }
+  }
+}
+
+function genNullable(args: any[]) {
+  return args.map((i) => i || 'null');
+}
+
+function genCompoundExpression(
+  node: CompoundExpressionNode,
+  context: CodegenContext
+) {
+  const { push } = context;
+  const { children } = node;
+
+  for (let i = 0; i < children.length; i++) {
+    const child = children[i];
+
+    if (isString(child)) {
+      push(child);
+    } else {
+      genNode(child, context);
+    }
   }
 }
 
