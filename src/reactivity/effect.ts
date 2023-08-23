@@ -14,6 +14,7 @@ export class ReactiveEffect {
    */
   deps: Dep[] = [];
   scheduler: any;
+  parent: ReactiveEffect | undefined = void 0;
   onStop?: () => void;
 
   constructor(fn, scheduler?) {
@@ -27,12 +28,18 @@ export class ReactiveEffect {
 
     cleanupEffect(this);
 
+    let preShouldTrack = shouldTrack;
     shouldTrack = true;
 
+    this.parent = activeEffect;
     activeEffect = this;
+
     const result = this._fn();
 
-    shouldTrack = false;
+    activeEffect = this.parent;
+    this.parent = void 0;
+
+    shouldTrack = preShouldTrack;
 
     return result;
   }
