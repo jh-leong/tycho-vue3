@@ -17,6 +17,7 @@ describe('effect', () => {
     tycho.power++;
     expect(tychoPlus).toBe(101);
   });
+
   it('should return a runner when call effect', () => {
     let foo = 0;
     const runner = effect(() => {
@@ -29,6 +30,41 @@ describe('effect', () => {
     expect(foo).toBe(2);
     expect(res).toBe('foo');
   });
+
+  it('should discover new branches while running automatically', () => {
+    let dummy;
+    const obj = reactive({ prop: 'value', run: false });
+
+    const conditionalSpy = jest.fn(() => {
+      dummy = obj.run ? obj.prop : 'other';
+    });
+    effect(conditionalSpy);
+
+    expect(dummy).toBe('other');
+    expect(conditionalSpy).toHaveBeenCalledTimes(1);
+
+    obj.prop = 'Hi';
+    expect(dummy).toBe('other');
+    expect(conditionalSpy).toHaveBeenCalledTimes(1);
+
+    obj.run = true;
+    expect(dummy).toBe('Hi');
+    expect(conditionalSpy).toHaveBeenCalledTimes(2);
+
+    obj.prop = 'World';
+    expect(dummy).toBe('World');
+    expect(conditionalSpy).toHaveBeenCalledTimes(3);
+
+    obj.run = false;
+    expect(dummy).toBe('other');
+    expect(conditionalSpy).toHaveBeenCalledTimes(4);
+
+    // this should not trigger effect since `obj.prop` is not a dependency
+    obj.prop = 'ni hao';
+    expect(dummy).toBe('other');
+    expect(conditionalSpy).toHaveBeenCalledTimes(4);
+  });
+
   it('scheduler', () => {
     let dummy;
     let run: any;
@@ -56,6 +92,7 @@ describe('effect', () => {
     // should have run
     expect(dummy).toBe(2);
   });
+
   it('stop', () => {
     let dummy;
     const obj = reactive({ prop: 1 });

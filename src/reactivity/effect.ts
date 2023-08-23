@@ -1,4 +1,5 @@
 import { extend } from '../shared';
+import { Dep, createDep } from './dep';
 
 let shouldTrack: boolean;
 let activeEffect: ReactiveEffect;
@@ -11,7 +12,7 @@ export class ReactiveEffect {
    * 所有包含当前 Effect 实例的集合
    * 用于调用 stop 时, 追踪收集的依赖, 执行清空依赖逻辑
    */
-  deps: Set<ReactiveEffect>[] = [];
+  deps: Dep[] = [];
   scheduler: any;
   onStop?: () => void;
 
@@ -23,6 +24,8 @@ export class ReactiveEffect {
     if (!this.active) {
       return this._fn();
     }
+
+    cleanupEffect(this);
 
     shouldTrack = true;
 
@@ -58,7 +61,7 @@ function cleanupEffect(effect: ReactiveEffect) {
  * 并且 object 没有引用时可以被垃圾回收
  * WeakMap 不能被迭代
  */
-const targetMap = new WeakMap();
+const targetMap = new WeakMap<object, Map<string, Dep>>();
 
 /**
  * @method 依赖收集
@@ -81,7 +84,7 @@ export function track(target, key) {
   trackEffects(dep);
 }
 
-export function trackEffects(dep: Set<ReactiveEffect>) {
+export function trackEffects(dep: Dep) {
   // 避免 deps 重复收集
   if (dep.has(activeEffect)) return;
 
@@ -105,15 +108,18 @@ export function trigger(target, key) {
   }
 }
 
-export function triggerEffects(dep: any) {
-  // todo: 当没依赖收集时 dep 有可能不存在
-  if (dep) {
-    for (const effect of dep) {
-      if (effect.scheduler) {
-        effect.scheduler();
-      } else {
-        effect.run();
-      }
+export function triggerEffects(dep?: Dep) {
+  /**
+   * 遍历 dep 过程中, 触发 effect.run() 会导致 dep 变化 (清空依赖, 收集依赖 死循环)
+   * 所以需要创建一个新的 Set, 用于 trigger dep 中的 effect
+   */
+  const effectsToRun = createDep(dep);
+
+  for (const effect of effectsToRun) {
+    if (effect.scheduler) {
+      effect.scheduler();
+    } else {
+      effect.run();
     }
   }
 }
