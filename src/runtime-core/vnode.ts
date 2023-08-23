@@ -33,12 +33,13 @@ export interface VNodeComponent extends VNodeBase {
   children?: Record<string, (props?: SlotProps) => VNode[] | VNode>;
 }
 
-export type RenderFunction = () => VNode;
+export type RenderFunction = (ctx: ComponentInternalInstance) => VNode;
 
 export type Component = {
   render: RenderFunction;
   setup?: Function;
   name?: string;
+  template?: string;
 };
 
 export interface VNodeFragment extends VNodeBase {
@@ -54,6 +55,8 @@ export interface VNodeText extends VNodeBase {
 }
 
 export type VNodeProps = Record<PropertyKey, any>;
+
+export { createVNode as createElementVNode };
 
 export function createVNode<T extends VNode['type'], V = VNode>(
   type: T,

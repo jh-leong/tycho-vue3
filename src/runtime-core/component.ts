@@ -111,6 +111,12 @@ function handleSetupResult(
 function finishComponentSetup(instance: ComponentInternalInstance) {
   const Component = instance.type as Component;
 
+  if (compiler && !Component.render) {
+    if (Component.template) {
+      Component.render = compiler(Component.template);
+    }
+  }
+
   instance.render = Component.render;
 }
 
@@ -123,3 +129,10 @@ export function getCurrentInstance() {
 const setCurrentInstance = (instance: typeof currentInstance) => {
   currentInstance = instance;
 };
+
+type CompileFunction = (template: string) => RenderFunction;
+
+let compiler: CompileFunction;
+export function registerRuntimeComplier(_compiler: CompileFunction) {
+  compiler = _compiler;
+}
