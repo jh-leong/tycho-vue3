@@ -3,12 +3,16 @@
     "target": "es2016",
     "lib": ["DOM", "es6", "ES2016"],
     "module": "esnext",
-    "types": ["jest"],
+    "types": ["vitest/globals"],
     "esModuleInterop": true,
     "moduleResolution": "node",
     "forceConsistentCasingInFileNames": true,
     "strict": true,
     "noImplicitAny": false,
-    "skipLibCheck": true
-  }
+    "skipLibCheck": true,
+    "paths": {
+      "@tycho-vue/*": ["./packages/*/src"]
+    }
+  },
+  "include": ["packages/*/src", "packages/*/__tests__"]
 }
